@@ -3,8 +3,8 @@ services:
     name: tournament-backend
     env: node
     repo: https://github.com/golden00929/tournament-management-system
-    buildCommand: cd backend && npm install && npm run build && npx prisma generate
-    startCommand: cd backend && npm start
+    buildCommand: cd backend && npm install && npx prisma generate
+    startCommand: cd backend && npx ts-node --transpile-only src/server.ts
     envVars:
       - key: NODE_ENV
         value: production

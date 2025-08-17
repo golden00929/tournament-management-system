@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -6,8 +6,8 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# 종속성 설치
-RUN npm ci --only=production
+# 종속성 설치 (생산 환경용)
+RUN npm ci --omit=dev
 
 # 애플리케이션 코드 복사
 COPY . .
