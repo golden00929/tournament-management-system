@@ -8,6 +8,9 @@ export interface AuthRequest extends Request {
     name: string;
     isActive: boolean;
   };
+  body: any;
+  params: any;
+  query: any;
 }
 
 export const authenticate = async (
