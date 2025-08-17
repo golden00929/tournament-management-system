@@ -28,6 +28,7 @@ import paymentRoutes from './routes/payment';
 import advancedEloRoutes from './routes/advancedElo';
 import aiSchedulerRoutes from './routes/aiScheduler';
 import notificationRoutes from './routes/notification';
+import setupRoutes from './routes/setup';
 
 // Import WebSocket server
 import { initializeSocketServer } from './websocket/socketServer';
@@ -139,6 +140,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/advanced-elo', advancedEloRoutes);
 app.use('/api/ai-scheduler', aiSchedulerRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/setup', setupRoutes);
 
 // Static files for uploads
 app.use('/uploads', express.static('./uploads'));
