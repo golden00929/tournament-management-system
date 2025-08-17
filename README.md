@@ -97,7 +97,31 @@ npx prisma studio  # 포트 5555
 
 ## 📦 배포
 
-이 프로젝트는 Netlify를 통해 배포되어 베타 테스트가 가능합니다.
+### 프론트엔드 (Netlify)
+```bash
+# 자동 배포 설정
+- GitHub 연결
+- Base directory: frontend
+- Build command: npm run build
+- Publish directory: frontend/build
+- 환경 변수: REACT_APP_API_URL
+```
+
+### 백엔드 (Render/Railway)
+```bash
+# 배포 설정
+- GitHub 연결
+- Root directory: backend
+- Build command: npm install && npm run build
+- Start command: npm start
+- 환경 변수: DATABASE_URL, JWT_SECRET
+```
+
+### 🚀 베타 테스트 완료
+✅ **111경기 AI 자동 스케줄링**
+✅ **엑셀 내보내기** (대진표 + 시간표)
+✅ **선수 인증 시스템** (localStorage 토큰)
+✅ **32명 하이브리드 토너먼트** 성공
 
 ## 🔧 개발자 정보
 
