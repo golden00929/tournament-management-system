@@ -1,0 +1,29 @@
+{
+  "name": "tournament-management-system",
+  "version": "1.0.0",
+  "description": "Vietnamese Tournament Management System",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "build": "cd backend && npm install && npx prisma generate",
+    "start": "cd backend && npx ts-node --transpile-only src/server.ts",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "keywords": [
+    "tournament",
+    "management",
+    "badminton",
+    "sports",
+    "vietnamese"
+  ],
+  "author": "Tournament Management System",
+  "license": "MIT"
+}

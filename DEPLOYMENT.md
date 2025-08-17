@@ -1,223 +1,93 @@
-# Deployment Guide - Tournament Management System
+# 🚀 Deployment Guide
 
-## 🚀 Netlify Frontend Deployment
+## Current Status
+- ✅ Frontend: Deployed on Netlify - https://magnificent-entremet-27d825.netlify.app
+- ⏳ Backend: Ready for deployment on Render
 
-### Prerequisites
-1. GitHub account
-2. Netlify account 
-3. Backend API deployed (Heroku/Railway/Vercel)
+## Backend Deployment on Render
 
-### Step 1: GitHub Repository Setup
+### Option 1: Create New Web Service (Recommended)
+
+1. **Go to Render Dashboard** → Create New → Web Service
+2. **Connect Repository**: Select `tournament-management-system`
+3. **Configure Service**:
+   - **Environment**: `Node`
+   - **Region**: Choose closest to your location
+   - **Branch**: `main`
+   - **Root Directory**: `backend`
+   - **Build Command**: `npm install && npx prisma generate`
+   - **Start Command**: `npx ts-node --transpile-only src/server.ts`
+
+4. **Environment Variables**:
+   ```
+   NODE_ENV=production
+   PORT=10000
+   DATABASE_URL=[PostgreSQL connection string from Render database]
+   JWT_SECRET=[Auto-generate or set secure value]
+   BCRYPT_ROUNDS=12
+   CORS_ORIGIN=https://magnificent-entremet-27d825.netlify.app
+   ```
+
+5. **Database Setup**:
+   - Create PostgreSQL database on Render
+   - Use the connection string as DATABASE_URL
+
+### Option 2: Manual Deployment Commands
+
+If using the .render.yaml configuration doesn't work, try these manual settings:
+
 ```bash
-# Already done locally - just need to push to GitHub
-git add .
-git commit -m "feat: add Netlify deployment configuration"
-git remote add origin https://github.com/yourusername/tournament-management-system.git
-git push -u origin master
+# Build Command
+npm install && npx prisma generate
+
+# Start Command  
+npx ts-node --transpile-only src/server.ts
+
+# Environment
+Node.js
+
+# Root Directory
+backend
 ```
 
-### Step 2: Netlify Configuration
+## Environment Variables Needed
 
-#### Manual Deployment via GitHub
-1. Log in to [Netlify](https://netlify.com)
-2. Click "New site from Git"
-3. Connect to GitHub and select your repository
-4. Configure build settings:
-   - **Base directory**: `frontend`
-   - **Build command**: `npm run build`
-   - **Publish directory**: `frontend/build`
+| Variable | Value | Description |
+|----------|--------|-------------|
+| `NODE_ENV` | `production` | Environment mode |
+| `PORT` | `10000` | Server port |
+| `DATABASE_URL` | `postgresql://...` | PostgreSQL connection string |
+| `JWT_SECRET` | `[secure-random-string]` | JWT signing secret |
+| `BCRYPT_ROUNDS` | `12` | Password hashing rounds |
+| `CORS_ORIGIN` | `https://magnificent-entremet-27d825.netlify.app` | Frontend URL for CORS |
 
-#### Environment Variables (Netlify Dashboard)
+## Troubleshooting
+
+### If Render tries to use Docker:
+- Delete the existing service and create a new one
+- Ensure "Environment" is set to "Node" not "Docker"
+- Make sure no Dockerfile exists in the repository
+
+### If build fails:
+- Check that Node.js version is 20 or higher
+- Verify all environment variables are set
+- Check build logs for specific errors
+
+## Post-Deployment
+
+1. **Test Backend**: Visit `https://[your-render-url]/api/health`
+2. **Update Frontend**: Update API base URL in frontend if needed
+3. **Test Full System**: Try login, tournament creation, player registration
+
+## Architecture
+
 ```
-REACT_APP_API_URL=https://your-backend-api.herokuapp.com/api
-REACT_APP_WS_URL=wss://your-backend-api.herokuapp.com
-REACT_APP_ENV=production
-```
-
-### Step 3: Custom Domain (Optional)
-1. In Netlify Dashboard → Domain Settings
-2. Add custom domain
-3. Configure DNS settings
-
-## 🛠️ Backend Deployment Options
-
-### Option 1: Heroku (Recommended)
-```bash
-# Install Heroku CLI
-cd backend
-heroku create your-tournament-api
-heroku config:set NODE_ENV=production
-heroku config:set JWT_SECRET=your-super-secret-jwt-key
-heroku config:set DATABASE_URL=your-production-database-url
-git subtree push --prefix backend heroku master
-```
-
-### Option 2: Railway
-1. Connect GitHub repository
-2. Select backend folder
-3. Add environment variables
-4. Deploy automatically
-
-### Option 3: Vercel
-```bash
-cd backend
-npm install -g vercel
-vercel --prod
+Frontend (Netlify) → Backend (Render) → PostgreSQL (Render)
 ```
 
-## 🗄️ Database Options
-
-### Option 1: PostgreSQL (Production Recommended)
-1. **Heroku Postgres**: Free tier available
-2. **Supabase**: Free tier with real-time features
-3. **PlanetScale**: Serverless MySQL
-
-### Option 2: Keep SQLite (Development Only)
-```bash
-# Upload database file with your deployment
-# Not recommended for production
-```
-
-## 📋 Environment Variables
-
-### Frontend (.env.production)
-```bash
-REACT_APP_API_URL=https://your-backend-api.herokuapp.com/api
-REACT_APP_WS_URL=wss://your-backend-api.herokuapp.com
-REACT_APP_ENV=production
-GENERATE_SOURCEMAP=false
-```
-
-### Backend (Production)
-```bash
-NODE_ENV=production
-JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-DATABASE_URL=postgresql://user:password@host:port/database
-CORS_ORIGIN=https://your-netlify-app.netlify.app
-EMAIL_SERVICE_API_KEY=your-email-service-key
-PORT=5000
-```
-
-## 🔧 Pre-deployment Checklist
-
-### Code Preparation
-- [ ] Remove console.log statements
-- [ ] Update API URLs to use environment variables
-- [ ] Configure CORS for production domain
-- [ ] Test build process locally
-- [ ] Verify all environment variables
-
-### Security
-- [ ] Generate secure JWT secret (32+ characters)
-- [ ] Set up proper CORS origins
-- [ ] Remove development dependencies
-- [ ] Enable HTTPS redirect
-- [ ] Set up rate limiting
-
-### Database
-- [ ] Run database migrations
-- [ ] Seed initial admin user
-- [ ] Backup development data if needed
-- [ ] Configure connection pooling
-
-## 🚦 Testing Deployment
-
-### Local Production Build Test
-```bash
-# Frontend
-cd frontend
-npm run build
-npm install -g serve
-serve -s build -l 3000
-
-# Backend  
-cd backend
-NODE_ENV=production npm start
-```
-
-### Deployment Verification
-1. **Frontend**: Visit your Netlify URL
-2. **Backend**: Test API endpoints
-3. **Database**: Verify data persistence
-4. **Authentication**: Test login/logout
-5. **Features**: Test core functionality
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### Build Failures
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-#### API Connection Issues
-- Check environment variables
-- Verify CORS configuration
-- Test API endpoints directly
-- Check network/firewall settings
-
-#### Database Connection
-- Verify DATABASE_URL format
-- Check database server status
-- Test connection locally first
-- Review database logs
-
-### Monitoring
-- Set up error tracking (Sentry)
-- Monitor API response times
-- Set up uptime monitoring
-- Review application logs regularly
-
-## 📈 Post-Deployment
-
-### Performance Optimization
-- Enable CDN for static assets
-- Configure caching headers
-- Compress images and assets
-- Monitor bundle size
-
-### Backup Strategy
-- Database daily backups
-- Code repository maintenance
-- Environment variables backup
-- Documentation updates
-
-## 🔄 Continuous Deployment
-
-### GitHub Actions (Optional)
-```yaml
-# .github/workflows/deploy.yml
-name: Deploy to Netlify
-on:
-  push:
-    branches: [master]
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '18'
-      - name: Install and Build
-        run: |
-          cd frontend
-          npm install
-          npm run build
-      - name: Deploy to Netlify
-        uses: nwtgck/actions-netlify@v1.2
-        with:
-          publish-dir: './frontend/build'
-        env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-```
-
-This deployment guide provides comprehensive instructions for getting your tournament management system live and accessible for beta testing.
+The system uses:
+- **Frontend**: React with TypeScript on Netlify
+- **Backend**: Node.js with Express and Prisma on Render
+- **Database**: PostgreSQL on Render
+- **Authentication**: JWT tokens
+- **Real-time**: WebSocket connections for live updates
