@@ -36,7 +36,8 @@ import { initializeSocketServer } from './websocket/socketServer';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // Rate limiting
 const limiter = rateLimit({
@@ -50,12 +51,16 @@ app.use(helmet());
 app.use(limiter);
 
 // CORS configuration
+const corsOrigins = process.env.NODE_ENV === 'production' 
+  ? [process.env.CORS_ORIGIN || 'https://magnificent-entremet-27d825.netlify.app']
+  : [
+      'http://localhost:3000',
+      'http://localhost:3001', 
+      'http://localhost:3002'
+    ];
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002'
-  ],
+  origin: corsOrigins,
   credentials: true,
   optionsSuccessStatus: 200,
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -81,10 +86,29 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'));
 }
 
-// Health check endpoint
+// Health check endpoints for Railway
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'Tournament Management Server is running',
+    status: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    environment: process.env.NODE_ENV || 'development',
+    database: process.env.DATABASE_URL ? 'connected' : 'not configured'
+  });
+});
+
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    api: 'running',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
@@ -132,8 +156,9 @@ const server = http.createServer(app);
 const socketServer = initializeSocketServer(server);
 
 // Start server
-server.listen(PORT, async () => {
+server.listen(PORT, HOST, async () => {
   console.log(`🚀 Tournament Management Server is running on port ${PORT}`);
+  console.log(`🏠 Host: ${HOST}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🌐 CORS Origin: ${process.env.CORS_ORIGIN || 'http://localhost:3000'}`);
   console.log(`💾 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
