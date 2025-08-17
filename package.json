@@ -4,7 +4,6 @@
   "description": "Vietnamese Tournament Management System",
   "private": true,
   "workspaces": [
-    "frontend",
     "backend"
   ],
   "scripts": {

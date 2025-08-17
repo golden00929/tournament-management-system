@@ -1,0 +1,9 @@
+frontend/
+*.md
+.git/
+.env.example
+screenshots/
+docs/
+node_modules/
+.render.yaml
+vercel.json
