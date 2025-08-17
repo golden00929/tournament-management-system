@@ -1,0 +1,12 @@
+[providers]
+node = "20"
+
+[build]
+cmd = "npm install && npx prisma generate"
+
+[start]
+cmd = "npx ts-node --transpile-only src/server.ts"
+
+[variables]
+NODE_ENV = "production"
+PORT = "3000"
