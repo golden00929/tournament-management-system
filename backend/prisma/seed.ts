@@ -119,9 +119,13 @@ async function main() {
 
   console.log(`✅ Created ${players.length} sample players`);
 
-  // Create sample tournament
-  const tournament = await prisma.tournament.create({
-    data: {
+  // Create sample tournament (using upsert to prevent duplicates)
+  const tournament = await prisma.tournament.upsert({
+    where: { 
+      name: '2025 신년 배드민턴 대회'
+    },
+    update: {},
+    create: {
       name: '2025 신년 배드민턴 대회',
       description: '새해를 맞이하여 개최하는 배드민턴 대회입니다.',
       category: 'badminton',
@@ -146,19 +150,31 @@ async function main() {
 
   console.log('✅ Created sample tournament:', tournament.name);
 
-  // Create sample participants for the tournament
+  // Create sample participants for the tournament (with duplicate prevention)
   for (let i = 0; i < players.length; i++) {
     const player = players[i];
-    await prisma.participant.create({
-      data: {
+    
+    // Check if participant already exists
+    const existingParticipant = await prisma.participant.findFirst({
+      where: {
         tournamentId: tournament.id,
         playerId: player.id,
-        eventType: 'singles',
-        approvalStatus: 'approved',
-        paymentStatus: 'completed',
-        registrationElo: player.eloRating,
+        eventType: 'singles'
       }
     });
+
+    if (!existingParticipant) {
+      await prisma.participant.create({
+        data: {
+          tournamentId: tournament.id,
+          playerId: player.id,
+          eventType: 'singles',
+          approvalStatus: 'approved',
+          paymentStatus: 'completed',
+          registrationElo: player.eloRating,
+        }
+      });
+    }
   }
 
   console.log(`✅ Created ${players.length} participants for the tournament`);
