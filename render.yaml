@@ -1,8 +1,9 @@
 services:
   - type: web
     name: tournament-backend
-    runtime: node
-    buildCommand: cd backend && npm install && npm run build
+    env: node
+    repo: https://github.com/golden00929/tournament-management-system
+    buildCommand: cd backend && npm install && npm run build && npx prisma generate
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
