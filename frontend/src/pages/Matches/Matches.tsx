@@ -43,6 +43,8 @@ import {
   Notifications,
   Send,
   Campaign,
+  Download,
+  FileDownload,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { formatDateTime } from '../../utils/dateUtils';
@@ -66,7 +68,7 @@ import {
   useSendNotificationMutation,
   useSendUrgentAnnouncementMutation,
   useSendMatchStartingNotificationMutation,
-  useGetNotificationStatsQuery
+  useGetNotificationStatsQuery,
 } from '../../store/api/apiSlice';
 import BracketConfiguration from '../../components/Tournament/BracketConfiguration';
 
@@ -132,6 +134,8 @@ const Matches: React.FC = () => {
   const [selectedTournament, setSelectedTournament] = useState<string>('');
   const [tabValue, setTabValue] = useState(0);
   const [alertMessage, setAlertMessage] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isExportingBracket, setIsExportingBracket] = useState(false);
+  const [isExportingSchedule, setIsExportingSchedule] = useState(false);
   
   const { data: tournamentsData, isLoading: isLoadingTournaments } = useGetTournamentsQuery({});
   const [generateBracket, { isLoading: isGeneratingBracket }] = useGenerateBracketMutation();
@@ -163,6 +167,126 @@ const Matches: React.FC = () => {
         type: 'error', 
         message: err.data?.message || '대진표 생성 중 오류가 발생했습니다.' 
       });
+    }
+  };
+
+  // 📊 대진표 엑셀 다운로드 (fetch 사용)
+  const handleExportBracket = async () => {
+    if (!selectedTournament || !selectedTournamentData) return;
+    
+    try {
+      setAlertMessage(null);
+      setIsExportingBracket(true);
+      
+      // 토큰 가져오기
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setAlertMessage({ type: 'error', message: '로그인이 필요합니다.' });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/matches/tournament/${selectedTournament}/export/bracket`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('엑셀 파일 다운로드에 실패했습니다.');
+      }
+
+      const blob = await response.blob();
+      
+      // 파일 다운로드
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // 파일명 생성 (한글 대회명 안전하게 처리)
+      const safeFileName = selectedTournamentData.name.replace(/[^\w\s-가-힣]/gi, '').trim();
+      const timestamp = new Date().toISOString().slice(0, 10);
+      link.download = `대진표_${safeFileName}_${timestamp}.xlsx`;
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // 정리
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      setAlertMessage({ type: 'success', message: '대진표 엑셀 파일이 다운로드되었습니다!' });
+    } catch (err: any) {
+      console.error('대진표 엑셀 내보내기 실패:', err);
+      setAlertMessage({ 
+        type: 'error', 
+        message: err.message || '대진표 엑셀 내보내기 중 오류가 발생했습니다.' 
+      });
+    } finally {
+      setIsExportingBracket(false);
+    }
+  };
+
+  // 📅 시간표 엑셀 다운로드 (fetch 사용)
+  const handleExportSchedule = async () => {
+    if (!selectedTournament || !selectedTournamentData) return;
+    
+    try {
+      setAlertMessage(null);
+      setIsExportingSchedule(true);
+      
+      // 토큰 가져오기
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setAlertMessage({ type: 'error', message: '로그인이 필요합니다.' });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/matches/tournament/${selectedTournament}/export/schedule`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('엑셀 파일 다운로드에 실패했습니다.');
+      }
+
+      const blob = await response.blob();
+      
+      // 파일 다운로드
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // 파일명 생성
+      const safeFileName = selectedTournamentData.name.replace(/[^\w\s-가-힣]/gi, '').trim();
+      const timestamp = new Date().toISOString().slice(0, 10);
+      link.download = `경기시간표_${safeFileName}_${timestamp}.xlsx`;
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      // 정리
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+      
+      setAlertMessage({ type: 'success', message: '경기 시간표 엑셀 파일이 다운로드되었습니다!' });
+    } catch (err: any) {
+      console.error('시간표 엑셀 내보내기 실패:', err);
+      setAlertMessage({ 
+        type: 'error', 
+        message: err.message || '시간표 엑셀 내보내기 중 오류가 발생했습니다.' 
+      });
+    } finally {
+      setIsExportingSchedule(false);
     }
   };
 
@@ -223,7 +347,7 @@ const Matches: React.FC = () => {
             </FormControl>
 
             {selectedTournament && (
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
                 <Button
                   variant="outlined"
                   startIcon={<Add />}
@@ -250,6 +374,24 @@ const Matches: React.FC = () => {
                   onClick={() => navigate(`/tournaments/${selectedTournament}/bracket`)}
                 >
                   대진표 보기
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<FileDownload />}
+                  onClick={handleExportBracket}
+                  disabled={isExportingBracket}
+                  color="secondary"
+                >
+                  {isExportingBracket ? '내보내는 중...' : '대진표 엑셀'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<Download />}
+                  onClick={handleExportSchedule}
+                  disabled={isExportingSchedule}
+                  color="secondary"
+                >
+                  {isExportingSchedule ? '내보내는 중...' : '시간표 엑셀'}
                 </Button>
               </Box>
             )}

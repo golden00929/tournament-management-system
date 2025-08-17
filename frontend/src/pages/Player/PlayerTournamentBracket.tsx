@@ -53,6 +53,17 @@ const PlayerTournamentBracket: React.FC = () => {
     error: bracketError,
   } = useGetTournamentBracketQuery(tournamentId!, { skip: !tournamentId });
 
+  // 디버깅 로그 추가
+  console.log('🎾 PlayerTournamentBracket Debug:', {
+    tournamentId,
+    bracketLoading,
+    bracketError,
+    bracketData,
+    hasData: !!bracketData,
+    brackets: bracketData?.data?.brackets,
+    bracketCount: bracketData?.data?.brackets?.length || 0
+  });
+
   const {
     data: profileData,
   } = useGetPlayerProfileQuery();

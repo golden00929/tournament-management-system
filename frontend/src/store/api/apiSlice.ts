@@ -7,10 +7,19 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
     prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as RootState).auth.token;
+      // Redux store에서 토큰 시도
+      let token = (getState() as RootState).auth.token;
+      
+      // Redux store에 토큰이 없으면 localStorage에서 가져오기 (선수 로그인용)
+      if (!token) {
+        token = localStorage.getItem('token');
+      }
+      
+      console.log('API Request - Token source:', token === (getState() as RootState).auth.token ? 'Redux' : 'localStorage');
       console.log('API Request - Token:', token ? 'Present' : 'Missing');
       console.log('Token value:', token ? `${token.substring(0, 20)}...` : 'null');
       console.log('Token length:', token ? token.length : 0);
+      
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
         console.log('API Request - Authorization header set');

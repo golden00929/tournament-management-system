@@ -158,7 +158,17 @@ export class AISchedulingService {
     // 선수별 마지막 경기 종료 시간 추적 (휴식 시간 보장)
     const playerLastEndTime: { [playerId: string]: Date } = {};
 
-    const startTime = new Date(params.startTime);
+    // 시간 파싱: "09:00" 또는 "2025-08-17T15:34" 형식 지원
+    let startTime: Date;
+    if (params.startTime.includes('T')) {
+      // ISO datetime 형식 (2025-08-17T15:34)
+      startTime = new Date(params.startTime + ':00'); // 초 추가하여 완전한 ISO 형식으로
+    } else {
+      // 시간만 있는 형식 (09:00)
+      const [hour, minute] = params.startTime.split(':').map(Number);
+      startTime = new Date();
+      startTime.setHours(hour, minute, 0, 0);
+    }
 
     // 우선순위별로 정렬 (그룹전 → 토너먼트 순)
     const sortedMatches = matches.sort((a, b) => {
@@ -263,7 +273,17 @@ export class AISchedulingService {
   ): number {
     if (schedule.length === 0) return 0;
 
-    const startTime = new Date(params.startTime);
+    // 시간 파싱: "09:00" 또는 "2025-08-17T15:34" 형식 지원
+    let startTime: Date;
+    if (params.startTime.includes('T')) {
+      // ISO datetime 형식 (2025-08-17T15:34)
+      startTime = new Date(params.startTime + ':00'); // 초 추가하여 완전한 ISO 형식으로
+    } else {
+      // 시간만 있는 형식 (09:00)
+      const [hour, minute] = params.startTime.split(':').map(Number);
+      startTime = new Date();
+      startTime.setHours(hour, minute, 0, 0);
+    }
     const lastEndTime = new Date(Math.max(
       ...schedule.map(item => new Date(item.estimatedEndTime).getTime())
     ));
@@ -318,14 +338,16 @@ export class AISchedulingService {
         if (match1.courtNumber === match2.courtNumber) {
           const start1 = new Date(match1.scheduledTime);
           const start2 = new Date(match2.scheduledTime);
-          const end1 = new Date(start1.getTime() + 60 * 60000); // 1시간 가정
-          const end2 = new Date(start2.getTime() + 60 * 60000);
-
-          // 시간 겹침 검사
-          if ((start1 < end2) && (start2 < end1)) {
+          
+          // 실제 경기 시간 기준: 45분 경기 + 15분 휴식 = 60분 슬롯
+          // 하지만 실제 겹침은 정확히 같은 시작 시간일 때만 충돌
+          const timeDiff = Math.abs(start1.getTime() - start2.getTime());
+          
+          // 15분(900초) 미만 차이면 충돌로 간주
+          if (timeDiff < 15 * 60 * 1000) {
             conflicts.push({
               type: 'court',
-              description: `코트 ${match1.courtNumber} 시간 충돌`,
+              description: `코트 ${match1.courtNumber} 시간 충돌 (${timeDiff / 60000}분 간격)`,
               matches: [match1.id, match2.id]
             });
           }
@@ -353,10 +375,19 @@ export class AISchedulingService {
           const start2 = new Date(match2.scheduledTime);
           const gap = Math.abs(start2.getTime() - start1.getTime()) / (1000 * 60);
 
-          if (gap < 120) { // 2시간 미만이면 충돌로 간주
+          // 실제 문제가 되는 충돌만 검사: 45분(경기시간) 미만 간격
+          if (gap < 45) { 
             conflicts.push({
               type: 'player',
-              description: `선수 연속 경기 (간격: ${Math.round(gap)}분)`,
+              description: `선수 동시 경기 충돌 (간격: ${Math.round(gap)}분)`,
+              matches: [match1.id, match2.id]
+            });
+          }
+          // 휴식시간 부족 경고 (45분 이상 60분 미만)
+          else if (gap < 60) {
+            conflicts.push({
+              type: 'player',
+              description: `선수 짧은 휴식 (간격: ${Math.round(gap)}분, 권장: 60분+)`,
               matches: [match1.id, match2.id]
             });
           }

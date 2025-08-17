@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>선수 로그인 테스트 도구</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1976d2;
+            text-align: center;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+        .success {
+            color: #4caf50;
+            font-weight: bold;
+        }
+        .error {
+            color: #f44336;
+            font-weight: bold;
+        }
+        .info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .token-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎾 선수 로그인 테스트 도구</h1>
+        
+        <div class="info">
+            <strong>사용법:</strong>
+            <ol>
+                <li>"선수 로그인" 버튼을 클릭하여 자동 로그인</li>
+                <li>"React 앱으로 이동" 버튼을 클릭하여 선수 페이지 접근</li>
+                <li>대진표가 정상 표시되는지 확인</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h3>1단계: 선수 로그인</h3>
+            <button onclick="playerLogin()">선수 로그인 (testplayer@example.com)</button>
+            <div id="loginResult"></div>
+        </div>
+
+        <div class="section">
+            <h3>2단계: 토큰 저장 상태 확인</h3>
+            <button onclick="checkTokens()">토큰 상태 확인</button>
+            <div id="tokenStatus"></div>
+        </div>
+
+        <div class="section">
+            <h3>3단계: API 테스트</h3>
+            <button onclick="testApplicationsAPI()">참가 신청 API 테스트</button>
+            <button onclick="testBracketAPI()">대진표 API 테스트</button>
+            <div id="apiResult"></div>
+        </div>
+
+        <div class="section">
+            <h3>4단계: React 앱 접근</h3>
+            <button onclick="goToPlayerApp()">선수 신청 내역 페이지로 이동</button>
+            <button onclick="goToBracket()">대진표 페이지로 이동</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        const TOURNAMENT_ID = 'ca1d9ea3-6f3e-491a-962e-828bd48ee037';
+
+        async function playerLogin() {
+            const resultDiv = document.getElementById('loginResult');
+            resultDiv.innerHTML = '로그인 중...';
+
+            try {
+                const response = await fetch(`${API_BASE}/player-auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'testplayer@example.com',
+                        password: 'testpass123'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 토큰과 사용자 정보를 localStorage에 저장
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify({
+                        id: data.data.player.id,
+                        name: data.data.player.name,
+                        email: data.data.player.email,
+                        role: 'player',
+                        eloRating: data.data.player.eloRating,
+                        skillLevel: data.data.player.skillLevel
+                    }));
+
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ 로그인 성공!</div>
+                        <div>선수명: ${data.data.player.name}</div>
+                        <div>ELO: ${data.data.player.eloRating}</div>
+                        <div class="token-display">토큰: ${data.data.token.substring(0, 50)}...</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ 로그인 실패: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 오류: ${error.message}</div>`;
+            }
+        }
+
+        function checkTokens() {
+            const statusDiv = document.getElementById('tokenStatus');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+
+            if (token && user) {
+                const userData = JSON.parse(user);
+                statusDiv.innerHTML = `
+                    <div class="success">✅ 토큰 저장됨</div>
+                    <div>사용자: ${userData.name} (${userData.role})</div>
+                    <div class="token-display">토큰 길이: ${token.length}자</div>
+                `;
+            } else {
+                statusDiv.innerHTML = `<div class="error">❌ 토큰이 저장되지 않음</div>`;
+            }
+        }
+
+        async function testApplicationsAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultDiv.innerHTML = `<div class="error">❌ 먼저 로그인하세요</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/player-tournaments/applications`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ 참가 신청 API 성공</div>
+                        <div>신청 개수: ${data.data.applications.length}</div>
+                        ${data.data.applications.map(app => `
+                            <div>- ${app.tournament.name} (${app.approvalStatus})</div>
+                        `).join('')}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ API 오류: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 네트워크 오류: ${error.message}</div>`;
+            }
+        }
+
+        async function testBracketAPI() {
+            const resultDiv = document.getElementById('apiResult');
+            const token = localStorage.getItem('token');
+
+            if (!token) {
+                resultDiv.innerHTML = `<div class="error">❌ 먼저 로그인하세요</div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/public/tournament/${TOURNAMENT_ID}/bracket`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    const brackets = data.data.brackets || [];
+                    const testPlayerMatches = [];
+                    
+                    // Test Player가 포함된 경기 찾기
+                    brackets.forEach(bracket => {
+                        bracket.matches.forEach(match => {
+                            if (match.player1Name === 'Test Player' || match.player2Name === 'Test Player') {
+                                testPlayerMatches.push({
+                                    matchNumber: match.matchNumber,
+                                    round: match.roundName,
+                                    opponent: match.player1Name === 'Test Player' ? match.player2Name : match.player1Name,
+                                    time: match.scheduledTime
+                                });
+                            }
+                        });
+                    });
+                    
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ 대진표 API 성공</div>
+                        <div>대회: ${data.data.tournament.name}</div>
+                        <div>대진표 개수: ${brackets.length}</div>
+                        <div>Test Player 경기 수: ${testPlayerMatches.length}</div>
+                        ${brackets.map(bracket => `
+                            <div>- ${bracket.name} (${bracket.matches.length}경기)</div>
+                        `).join('')}
+                        <div style="margin-top: 10px; font-weight: bold;">Test Player 경기 목록:</div>
+                        ${testPlayerMatches.map(match => `
+                            <div>Match ${match.matchNumber}: vs ${match.opponent} (${match.round})</div>
+                        `).join('')}
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ API 오류: ${data.message}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ 네트워크 오류: ${error.message}</div>`;
+            }
+        }
+
+        function goToPlayerApp() {
+            window.location.href = 'http://localhost:3000/player/applications';
+        }
+
+        function goToBracket() {
+            window.location.href = `http://localhost:3000/player/tournament/${TOURNAMENT_ID}/bracket`;
+        }
+
+        // 페이지 로드 시 토큰 상태 확인
+        window.onload = function() {
+            checkTokens();
+        };
+    </script>
+</body>
+</html>

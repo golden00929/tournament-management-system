@@ -1,4 +1,5 @@
 import express from 'express';
+import * as XLSX from 'xlsx';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest, requireRole } from '../middleware/auth';
 import { EloRatingService } from '../services/eloRatingService';
@@ -845,5 +846,347 @@ router.get('/tournament/:tournamentId/schedule-validation', authenticate, async 
     });
   }
 });
+
+// 📊 대진표 엑셀 내보내기
+router.get('/tournament/:tournamentId/export/bracket', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { tournamentId } = req.params;
+
+    // 대회 정보 조회
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      select: {
+        id: true,
+        name: true,
+        category: true,
+        venue: true,
+        startDate: true,
+        endDate: true
+      }
+    });
+
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: '대회를 찾을 수 없습니다.',
+        error: 'TOURNAMENT_NOT_FOUND'
+      });
+    }
+
+    // 모든 경기 조회 (대진표 순서대로)
+    const matches = await prisma.match.findMany({
+      where: { tournamentId },
+      include: {
+        player1: {
+          select: {
+            id: true,
+            name: true,
+            eloRating: true,
+            skillLevel: true,
+            phone: true
+          }
+        },
+        player2: {
+          select: {
+            id: true,
+            name: true,
+            eloRating: true,
+            skillLevel: true,
+            phone: true
+          }
+        },
+        bracket: {
+          select: {
+            name: true,
+            eventType: true
+          }
+        }
+      },
+      orderBy: [
+        { roundName: 'asc' },
+        { matchNumber: 'asc' }
+      ]
+    });
+
+    // 엑셀 데이터 구성
+    const bracketData = matches.map((match, index) => ({
+      '경기번호': match.matchNumber || index + 1,
+      '라운드': match.roundName,
+      '브라켓': match.bracket?.name || '일반',
+      '경기유형': match.bracket?.eventType === 'singles' ? '단식' : '복식',
+      '선수1': match.player1?.name || 'TBD',
+      '선수1레이팅': match.player1?.eloRating || '',
+      '선수1등급': match.player1?.skillLevel ? getSkillLevelKorean(match.player1.skillLevel) : '',
+      '선수1연락처': match.player1?.phone || '',
+      'VS': 'VS',
+      '선수2': match.player2?.name || 'TBD',
+      '선수2레이팅': match.player2?.eloRating || '',
+      '선수2등급': match.player2?.skillLevel ? getSkillLevelKorean(match.player2.skillLevel) : '',
+      '선수2연락처': match.player2?.phone || '',
+      '상태': getMatchStatusKorean(match.status),
+      '점수': match.status === 'completed' ? `${match.player1Score || 0}-${match.player2Score || 0}` : '',
+      '승자': match.winnerId ? (match.winnerId === match.player1Id ? match.player1?.name : match.player2?.name) : '',
+      '비고': match.notes || ''
+    }));
+
+    // 대회 정보 시트
+    const tournamentInfo = [{
+      '항목': '대회명',
+      '내용': tournament.name
+    }, {
+      '항목': '카테고리',
+      '내용': tournament.category
+    }, {
+      '항목': '개최지',
+      '내용': tournament.venue
+    }, {
+      '항목': '시작일',
+      '내용': tournament.startDate ? new Date(tournament.startDate).toLocaleDateString('ko-KR') : ''
+    }, {
+      '항목': '종료일',
+      '내용': tournament.endDate ? new Date(tournament.endDate).toLocaleDateString('ko-KR') : ''
+    }, {
+      '항목': '총 경기수',
+      '내용': matches.length.toString()
+    }, {
+      '항목': '완료 경기',
+      '내용': matches.filter(m => m.status === 'completed').length.toString()
+    }, {
+      '항목': '생성일',
+      '내용': new Date().toLocaleString('ko-KR')
+    }];
+
+    // 라운드별 통계
+    const roundStats = matches.reduce((acc: any, match) => {
+      const round = match.roundName;
+      if (!acc[round]) {
+        acc[round] = { total: 0, completed: 0, scheduled: 0, ongoing: 0 };
+      }
+      acc[round].total++;
+      acc[round][match.status]++;
+      return acc;
+    }, {});
+
+    const roundStatsData = Object.entries(roundStats).map(([round, stats]: [string, any]) => ({
+      '라운드': round,
+      '총경기': stats.total,
+      '완료': stats.completed || 0,
+      '예정': stats.scheduled || 0,
+      '진행중': stats.ongoing || 0,
+      '진행률': stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) + '%' : '0%'
+    }));
+
+    // 워크북 생성
+    const workbook = XLSX.utils.book_new();
+
+    // 대회 정보 시트
+    const infoWorksheet = XLSX.utils.json_to_sheet(tournamentInfo);
+    XLSX.utils.book_append_sheet(workbook, infoWorksheet, '대회 정보');
+
+    // 대진표 시트
+    const bracketWorksheet = XLSX.utils.json_to_sheet(bracketData);
+    XLSX.utils.book_append_sheet(workbook, bracketWorksheet, '대진표');
+
+    // 라운드별 통계 시트
+    const statsWorksheet = XLSX.utils.json_to_sheet(roundStatsData);
+    XLSX.utils.book_append_sheet(workbook, statsWorksheet, '라운드별 통계');
+
+    // 엑셀 파일 생성
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // 파일명 생성 (한글 대회명 안전하게 처리)
+    const safeFileName = tournament.name.replace(/[^\w\s-가-힣]/gi, '').trim();
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const fileName = `대진표_${safeFileName}_${timestamp}.xlsx`;
+
+    // 응답 헤더 설정
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+    res.setHeader('Content-Length', buffer.length);
+
+    res.send(buffer);
+  } catch (error) {
+    console.error('대진표 엑셀 내보내기 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '대진표 엑셀 내보내기 중 오류가 발생했습니다.',
+      error: 'EXPORT_BRACKET_ERROR'
+    });
+  }
+});
+
+// 📅 경기 시간표 엑셀 내보내기
+router.get('/tournament/:tournamentId/export/schedule', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { tournamentId } = req.params;
+
+    // 대회 정보 조회
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      select: {
+        id: true,
+        name: true,
+        venue: true,
+        startDate: true
+      }
+    });
+
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: '대회를 찾을 수 없습니다.',
+        error: 'TOURNAMENT_NOT_FOUND'
+      });
+    }
+
+    // 시간표가 있는 경기만 조회 (시간 순서대로)
+    const scheduledMatches = await prisma.match.findMany({
+      where: { 
+        tournamentId,
+        scheduledTime: { not: null },
+        courtNumber: { not: null }
+      },
+      include: {
+        player1: {
+          select: {
+            name: true,
+            phone: true
+          }
+        },
+        player2: {
+          select: {
+            name: true,
+            phone: true
+          }
+        }
+      },
+      orderBy: [
+        { scheduledTime: 'asc' },
+        { courtNumber: 'asc' }
+      ]
+    });
+
+    // 시간표 데이터 구성
+    const scheduleData = scheduledMatches.map((match, index) => {
+      const scheduledTime = match.scheduledTime ? new Date(match.scheduledTime) : null;
+      
+      return {
+        '순서': index + 1,
+        '경기번호': match.matchNumber,
+        '시간': scheduledTime ? scheduledTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '',
+        '날짜': scheduledTime ? scheduledTime.toLocaleDateString('ko-KR') : '',
+        '코트': `${match.courtNumber}번 코트`,
+        '라운드': match.roundName,
+        '선수1': match.player1?.name || 'TBD',
+        '선수1연락처': match.player1?.phone || '',
+        'VS': 'VS',
+        '선수2': match.player2?.name || 'TBD',
+        '선수2연락처': match.player2?.phone || '',
+        '상태': getMatchStatusKorean(match.status),
+        '예상종료': scheduledTime ? 
+          new Date(scheduledTime.getTime() + 60 * 60 * 1000).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '',
+        '실제시작': match.actualStartTime ? 
+          new Date(match.actualStartTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '',
+        '실제종료': match.actualEndTime ? 
+          new Date(match.actualEndTime).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '',
+        '비고': match.notes || ''
+      };
+    });
+
+    // 코트별 일정 요약
+    const courtSummary = scheduledMatches.reduce((acc: any, match) => {
+      const court = match.courtNumber;
+      if (!acc[court!]) {
+        acc[court!] = { total: 0, byStatus: { scheduled: 0, ongoing: 0, completed: 0 } };
+      }
+      acc[court!].total++;
+      acc[court!].byStatus[match.status]++;
+      return acc;
+    }, {});
+
+    const courtSummaryData = Object.entries(courtSummary).map(([court, data]: [string, any]) => ({
+      '코트': `${court}번 코트`,
+      '총경기': data.total,
+      '예정': data.byStatus.scheduled || 0,
+      '진행중': data.byStatus.ongoing || 0,
+      '완료': data.byStatus.completed || 0,
+      '가동률': data.total > 0 ? Math.round(((data.byStatus.completed + data.byStatus.ongoing) / data.total) * 100) + '%' : '0%'
+    }));
+
+    // 시간대별 분포
+    const timeSlots = scheduledMatches.reduce((acc: any, match) => {
+      if (match.scheduledTime) {
+        const hour = new Date(match.scheduledTime).getHours();
+        const timeSlot = `${hour}:00-${hour + 1}:00`;
+        acc[timeSlot] = (acc[timeSlot] || 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    const timeDistribution = Object.entries(timeSlots).map(([time, count]) => ({
+      '시간대': time,
+      '경기수': count
+    }));
+
+    // 워크북 생성
+    const workbook = XLSX.utils.book_new();
+
+    // 경기 시간표 시트
+    const scheduleWorksheet = XLSX.utils.json_to_sheet(scheduleData);
+    XLSX.utils.book_append_sheet(workbook, scheduleWorksheet, '경기 시간표');
+
+    // 코트별 요약 시트
+    const courtWorksheet = XLSX.utils.json_to_sheet(courtSummaryData);
+    XLSX.utils.book_append_sheet(workbook, courtWorksheet, '코트별 현황');
+
+    // 시간대별 분포 시트
+    const timeWorksheet = XLSX.utils.json_to_sheet(timeDistribution);
+    XLSX.utils.book_append_sheet(workbook, timeWorksheet, '시간대별 분포');
+
+    // 엑셀 파일 생성
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // 파일명 생성
+    const safeFileName = tournament.name.replace(/[^\w\s-가-힣]/gi, '').trim();
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const fileName = `경기시간표_${safeFileName}_${timestamp}.xlsx`;
+
+    // 응답 헤더 설정
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+    res.setHeader('Content-Length', buffer.length);
+
+    res.send(buffer);
+  } catch (error) {
+    console.error('시간표 엑셀 내보내기 오류:', error);
+    res.status(500).json({
+      success: false,
+      message: '시간표 엑셀 내보내기 중 오류가 발생했습니다.',
+      error: 'EXPORT_SCHEDULE_ERROR'
+    });
+  }
+});
+
+// 헬퍼 함수들
+function getSkillLevelKorean(skillLevel: string): string {
+  const levelMap: { [key: string]: string } = {
+    'a_class': 'Group A (Expert)',
+    'b_class': 'Group B (Advanced)',
+    'c_class': 'Group C (Intermediate)',
+    'd_class': 'Group D (Beginner)'
+  };
+  return levelMap[skillLevel] || skillLevel;
+}
+
+function getMatchStatusKorean(status: string): string {
+  const statusMap: { [key: string]: string } = {
+    'pending': '대기',
+    'scheduled': '예정',
+    'ongoing': '진행중',
+    'completed': '완료',
+    'cancelled': '취소'
+  };
+  return statusMap[status] || status;
+}
 
 export default router;
