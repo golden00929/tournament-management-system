@@ -5,7 +5,10 @@ import type { RootState } from '../store';
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.REACT_APP_API_URL || 'http://localhost:5000/api',
+    baseUrl: process.env.REACT_APP_API_URL || 
+             (process.env.NODE_ENV === 'production' 
+               ? 'https://tournament-management-system-production.up.railway.app/api'
+               : 'http://localhost:5000/api'),
     prepareHeaders: (headers, { getState }) => {
       // Redux store에서 토큰 시도
       let token = (getState() as RootState).auth.token;
