@@ -26,6 +26,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useGetTournamentsQuery, useDeleteTournamentMutation, useUpdateTournamentStatusMutation } from '../../store/api/apiSlice';
 import { formatDate, formatCurrency } from '../../utils/dateUtils';
+import { getValidUser } from '../../utils/localStorage';
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -58,6 +59,12 @@ const TournamentList: React.FC = () => {
   const [selectedTournament, setSelectedTournament] = React.useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = React.useState(false);
   const [deleteError, setDeleteError] = React.useState<string | null>(null);
+  const [deleteResponse, setDeleteResponse] = React.useState<any>(null);
+  const [showForceDelete, setShowForceDelete] = React.useState(false);
+
+  // 사용자 권한 확인
+  const currentUser = getValidUser();
+  const isAdmin = currentUser?.role === 'admin';
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, tournamentId: string) => {
     setAnchorEl(event.currentTarget);
@@ -77,21 +84,40 @@ const TournamentList: React.FC = () => {
   const handleDeleteCancel = () => {
     setDeleteDialog(false);
     setDeleteError(null);
-    setSelectedTournament(null); // 취소할 때만 selectedTournament 초기화
+    setDeleteResponse(null);
+    setShowForceDelete(false);
+    setSelectedTournament(null);
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDeleteConfirm = async (force = false) => {
     if (!selectedTournament) return;
 
     try {
-      await deleteTournament(selectedTournament).unwrap();
-      setDeleteDialog(false);
-      setDeleteError(null);
-      setSelectedTournament(null);
+      const result = await deleteTournament({ id: selectedTournament, force }).unwrap();
+      
+      if (result.softDelete) {
+        // Soft delete - show force delete option
+        setDeleteResponse(result);
+        setShowForceDelete(true);
+        setDeleteError(null);
+      } else {
+        // Successfully deleted
+        setDeleteDialog(false);
+        setDeleteError(null);
+        setDeleteResponse(null);
+        setShowForceDelete(false);
+        setSelectedTournament(null);
+      }
     } catch (err: any) {
       console.error('Delete tournament error:', err);
       setDeleteError(err.data?.message || '대회 삭제 중 오류가 발생했습니다.');
+      setDeleteResponse(null);
+      setShowForceDelete(false);
     }
+  };
+
+  const handleForceDelete = () => {
+    handleDeleteConfirm(true);
   };
 
   const handleStatusChange = async (status: string) => {
@@ -115,13 +141,20 @@ const TournamentList: React.FC = () => {
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h4">대회 관리</Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/tournaments/create')}
-        >
-          대회 생성
-        </Button>
+        {isAdmin && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/tournaments/create')}
+          >
+            대회 생성
+          </Button>
+        )}
+        {!isAdmin && (
+          <Alert severity="info" sx={{ ml: 2 }}>
+            관리자 권한이 필요합니다. 현재 계정: {currentUser?.role || 'unknown'}
+          </Alert>
+        )}
       </Box>
 
       <Box sx={{ 
@@ -136,12 +169,14 @@ const TournamentList: React.FC = () => {
                 <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                   {tournament.name}
                 </Typography>
-                <IconButton
-                  size="small"
-                  onClick={(e) => handleMenuClick(e, tournament.id)}
-                >
-                  <MoreVertIcon />
-                </IconButton>
+                {isAdmin && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleMenuClick(e, tournament.id)}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                )}
               </Box>
 
               <Chip
@@ -239,25 +274,69 @@ const TournamentList: React.FC = () => {
               {deleteError}
             </Alert>
           )}
-          <Typography>
-            정말로 이 대회를 삭제하시겠습니까?
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            삭제된 대회는 복구할 수 없으며, 관련된 모든 데이터가 함께 삭제됩니다.
-          </Typography>
+          
+          {deleteResponse && deleteResponse.softDelete ? (
+            <>
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                <Typography variant="body2" fontWeight="bold">
+                  {deleteResponse.message}
+                </Typography>
+                {deleteResponse.details && (
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    • 참가자: {deleteResponse.details.participants}명
+                    • 대진표: {deleteResponse.details.brackets}개  
+                    • 경기: {deleteResponse.details.matches}개
+                  </Typography>
+                )}
+              </Alert>
+              
+              {showForceDelete && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  <Typography variant="body2" fontWeight="bold">
+                    ⚠️ 강제 삭제 옵션
+                  </Typography>
+                  <Typography variant="body2" sx={{ mt: 1 }}>
+                    모든 관련 데이터(참가자, 대진표, 경기)를 완전히 삭제합니다.
+                    이 작업은 되돌릴 수 없습니다.
+                  </Typography>
+                </Alert>
+              )}
+            </>
+          ) : (
+            <>
+              <Typography>
+                정말로 이 대회를 삭제하시겠습니까?
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                삭제된 대회는 복구할 수 없으며, 관련된 모든 데이터가 함께 삭제됩니다.
+              </Typography>
+            </>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDeleteCancel}>
             취소
           </Button>
-          <Button
-            onClick={handleDeleteConfirm}
-            color="error"
-            variant="contained"
-            disabled={isDeleting}
-          >
-            {isDeleting ? '삭제 중...' : '삭제'}
-          </Button>
+          
+          {showForceDelete ? (
+            <Button
+              onClick={handleForceDelete}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+            >
+              {isDeleting ? '강제 삭제 중...' : '강제 삭제'}
+            </Button>
+          ) : (
+            <Button
+              onClick={() => handleDeleteConfirm(false)}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+            >
+              {isDeleting ? '삭제 중...' : '삭제'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

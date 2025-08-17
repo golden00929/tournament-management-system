@@ -567,17 +567,62 @@ router.patch('/:id/status', authenticate, requireRole(['admin']), async (req: Au
   }
 });
 
-// Delete tournament (soft delete - change status to cancelled)
+// Delete tournament with force option
 router.delete('/:id', authenticate, requireRole(['admin']), async (req: AuthRequest, res) => {
   try {
     const { id } = req.params;
+    const { force } = req.query; // ?force=true for hard delete
 
-    // Check if tournament has participants
-    const participantCount = await prisma.participant.count({
-      where: { tournamentId: id, isActive: true }
+    // Check tournament existence first
+    const tournament = await prisma.tournament.findUnique({
+      where: { id },
+      include: {
+        participants: true,
+        brackets: true,
+        matches: true,
+      }
     });
 
-    if (participantCount > 0) {
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: '대회를 찾을 수 없습니다.',
+        error: 'TOURNAMENT_NOT_FOUND'
+      });
+    }
+
+    const participantCount = tournament.participants.filter(p => p.isActive).length;
+    const bracketCount = tournament.brackets.length;
+    const matchCount = tournament.matches.length;
+
+    // If force delete is requested, delete everything
+    if (force === 'true') {
+      console.log(`Force deleting tournament ${id} with ${participantCount} participants, ${bracketCount} brackets, ${matchCount} matches`);
+      
+      try {
+        // Delete in correct order due to foreign key constraints
+        await prisma.match.deleteMany({ where: { tournamentId: id } });
+        await prisma.bracket.deleteMany({ where: { tournamentId: id } });
+        await prisma.participant.deleteMany({ where: { tournamentId: id } });
+        await prisma.tournament.delete({ where: { id } });
+
+        return res.json({
+          success: true,
+          message: `대회가 완전히 삭제되었습니다. (참가자: ${participantCount}, 대진표: ${bracketCount}, 경기: ${matchCount})`,
+        });
+      } catch (deleteError) {
+        console.error('Force delete error:', deleteError);
+        return res.status(500).json({
+          success: false,
+          message: '강제 삭제 중 오류가 발생했습니다.',
+          error: 'FORCE_DELETE_ERROR',
+          details: deleteError
+        });
+      }
+    }
+
+    // Normal delete logic
+    if (participantCount > 0 || bracketCount > 0 || matchCount > 0) {
       // Soft delete - change status instead of actual deletion
       await prisma.tournament.update({
         where: { id },
@@ -586,11 +631,18 @@ router.delete('/:id', authenticate, requireRole(['admin']), async (req: AuthRequ
 
       return res.json({
         success: true,
-        message: '참가자가 있는 대회는 취소 상태로 변경되었습니다.',
+        message: `참가자가 있는 대회는 취소 상태로 변경되었습니다. (참가자: ${participantCount}, 대진표: ${bracketCount}, 경기: ${matchCount})`,
+        softDelete: true,
+        forceDeleteUrl: `/api/tournaments/${id}?force=true`,
+        details: {
+          participants: participantCount,
+          brackets: bracketCount,
+          matches: matchCount
+        }
       });
     }
 
-    // Hard delete if no participants
+    // Hard delete if no related data
     await prisma.tournament.delete({
       where: { id }
     });
@@ -604,7 +656,8 @@ router.delete('/:id', authenticate, requireRole(['admin']), async (req: AuthRequ
     res.status(500).json({
       success: false,
       message: '대회 삭제 중 오류가 발생했습니다.',
-      error: 'DELETE_TOURNAMENT_ERROR'
+      error: 'DELETE_TOURNAMENT_ERROR',
+      details: error.message
     });
   }
 });

@@ -69,9 +69,9 @@ export const tournamentApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Tournament'],
     }),
-    deleteTournament: builder.mutation<any, string>({
-      query: (id) => ({
-        url: `/tournaments/${id}`,
+    deleteTournament: builder.mutation<any, { id: string; force?: boolean }>({
+      query: ({ id, force }) => ({
+        url: `/tournaments/${id}${force ? '?force=true' : ''}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Tournament'],
