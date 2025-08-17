@@ -1,0 +1,9 @@
+frontend/
+Dockerfile
+docker-compose.yml
+*.md
+.git/
+.gitignore
+.env.example
+screenshots/
+docs/
