@@ -54,7 +54,7 @@ const TournamentDetail: React.FC = () => {
   const handleDelete = async () => {
     if (window.confirm('정말로 이 대회를 삭제하시겠습니까?')) {
       try {
-        await deleteTournament(id!).unwrap();
+        await deleteTournament({ id: id! }).unwrap();
         navigate('/tournaments');
       } catch (err) {
         console.error('Failed to delete tournament:', err);
