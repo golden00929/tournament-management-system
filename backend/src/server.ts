@@ -34,19 +34,11 @@ import setupRoutes from './routes/setup';
 import { initializeSocketServer } from './websocket/socketServer';
 
 // Load environment variables
-if (process.env.NODE_ENV === 'production') {
-  dotenv.config({ path: '.env.production' });
-  console.log('🚀 Production 환경변수 로드됨');
-} else {
-  dotenv.config();
-  console.log('🔧 Development 환경변수 로드됨');
-}
+dotenv.config();
 
-// Railway 환경에서 DATABASE_URL 강제 설정
-if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('file:')) {
-  console.log('🔧 Railway 환경에서 SQLite DATABASE_URL로 강제 설정');
-  process.env.DATABASE_URL = 'file:./prisma/dev.db';
-}
+console.log('🔧 환경변수 로드 완료:', process.env.NODE_ENV || 'development', '모드');
+console.log('📊 데이터베이스:', process.env.DATABASE_URL?.includes('postgresql') ? 'postgresql' : 'sqlite');
+console.log('🚀 서버 포트:', process.env.PORT || 8080);
 
 const app = express();
 const PORT = process.env.PORT || 8080;
