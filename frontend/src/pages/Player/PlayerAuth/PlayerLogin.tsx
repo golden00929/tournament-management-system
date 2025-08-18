@@ -128,11 +128,11 @@ const PlayerLogin: React.FC = () => {
 
         // Redux store와 localStorage에 인증 정보 저장
         dispatch(setCredentials({
-          token: result.data.token,
+          token: result.data.accessToken,
           user: userData,
         }));
 
-        localStorage.setItem('token', result.data.token);
+        localStorage.setItem('token', result.data.accessToken);
         localStorage.setItem('user', JSON.stringify(userData));
 
         // localStorage 변경 이벤트 강제 발생 (같은 탭에서는 자동으로 발생하지 않음)

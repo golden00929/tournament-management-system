@@ -8,7 +8,9 @@ export const playerApiSlice = apiSlice.injectEndpoints({
         success: boolean;
         message: string;
         data: {
-          token: string;
+          accessToken: string;
+          refreshToken: string;
+          expiresIn: string;
           player: {
             id: string;
             name: string;
