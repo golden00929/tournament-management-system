@@ -2,13 +2,19 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '../store';
 
 // Base API slice with authentication
+const baseApiUrl = process.env.REACT_APP_API_URL || 
+                   (process.env.NODE_ENV === 'production' 
+                     ? 'https://tournament-management-system-production.up.railway.app/api'
+                     : 'http://localhost:5000/api');
+
+console.log('🔗 API Base URL configured:', baseApiUrl);
+console.log('🌍 NODE_ENV:', process.env.NODE_ENV);
+console.log('⚙️ REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.REACT_APP_API_URL || 
-             (process.env.NODE_ENV === 'production' 
-               ? 'https://tournament-management-system-production.up.railway.app/api'
-               : 'http://localhost:5000/api'),
+    baseUrl: baseApiUrl,
     prepareHeaders: (headers, { getState }) => {
       // Redux store에서 토큰 시도
       let token = (getState() as RootState).auth.token;
