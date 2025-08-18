@@ -36,6 +36,12 @@ import { initializeSocketServer } from './websocket/socketServer';
 // Load environment variables
 dotenv.config();
 
+// Railway 프로덕션 환경에서 DATABASE_URL 강제 설정
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('postgresql://')) {
+  console.log('🔧 Railway 프로덕션 환경에서 PostgreSQL URL 강제 설정');
+  process.env.DATABASE_URL = 'postgresql://postgres:FaCBXbPHnJzjFrcFqOgzcnpamuQZcPti@trolley.proxy.rlwy.net:58884/railway';
+}
+
 console.log('🔧 환경변수 로드 완료:', process.env.NODE_ENV || 'development', '모드');
 console.log('📊 데이터베이스:', process.env.DATABASE_URL?.includes('postgresql') ? 'postgresql' : 'sqlite');
 console.log('🚀 서버 포트:', process.env.PORT || 8080);
