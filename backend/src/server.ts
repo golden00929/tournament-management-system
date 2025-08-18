@@ -7,8 +7,8 @@ import rateLimit from 'express-rate-limit';
 import http from 'http';
 
 // Import middleware
-import { errorHandler } from './middleware/errorHandler';
-import { notFound } from './middleware/notFound';
+import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
+import { setupSecurityMiddleware, loginRateLimit } from './middleware/security';
 import { cacheTournamentData, cachePlayerData, cacheScheduleData, warmUpCache } from './middleware/cache';
 
 // Import routes
@@ -36,38 +36,18 @@ import { initializeSocketServer } from './websocket/socketServer';
 // Load environment variables
 dotenv.config();
 
+// Railway 환경에서 DATABASE_URL 강제 설정
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('file:')) {
+  console.log('🔧 Railway 환경에서 SQLite DATABASE_URL로 강제 설정');
+  process.env.DATABASE_URL = 'file:./prisma/dev.db';
+}
+
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX || '100'), // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later',
-});
-
-// Security middleware
-app.use(helmet());
-app.use(limiter);
-
-// CORS configuration
-const corsOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.CORS_ORIGIN || 'https://magnificent-entremet-27d825.netlify.app']
-  : [
-      'http://localhost:3000',
-      'http://localhost:3001', 
-      'http://localhost:3002'
-    ];
-
-app.use(cors({
-  origin: corsOrigins,
-  credentials: true,
-  optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  preflightContinue: false
-}));
+// Apply security middleware
+app.use(setupSecurityMiddleware());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -146,10 +126,10 @@ app.use('/api/setup', setupRoutes);
 app.use('/uploads', express.static('./uploads'));
 
 // 404 middleware
-app.use(notFound);
+app.use(notFoundHandler);
 
 // Error handling middleware
-app.use(errorHandler);
+app.use(globalErrorHandler);
 
 // Create HTTP server
 const server = http.createServer(app);
