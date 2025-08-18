@@ -31,10 +31,10 @@ const Login: React.FC = () => {
     try {
       const result = await login({ email, password }).unwrap();
       console.log('Login result:', result);
-      console.log('Token received:', result.data?.token ? `${result.data.token.substring(0, 20)}...` : 'none');
-      console.log('Token length:', result.data?.token ? result.data.token.length : 0);
+      console.log('Token received:', result.data?.accessToken ? `${result.data.accessToken.substring(0, 20)}...` : 'none');
+      console.log('Token length:', result.data?.accessToken ? result.data.accessToken.length : 0);
       dispatch(loginSuccess({
-        token: result.data.token,
+        token: result.data.accessToken,
         user: result.data.user
       }));
       navigate('/dashboard');
