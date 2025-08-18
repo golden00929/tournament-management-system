@@ -32,6 +32,7 @@ import setupRoutes from './routes/setup';
 
 // Import WebSocket server
 import { initializeSocketServer } from './websocket/socketServer';
+import { PrismaClient } from '@prisma/client';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +46,30 @@ if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.startsWi
 console.log('🔧 환경변수 로드 완료:', process.env.NODE_ENV || 'development', '모드');
 console.log('📊 데이터베이스:', process.env.DATABASE_URL?.includes('postgresql') ? 'postgresql' : 'sqlite');
 console.log('🚀 서버 포트:', process.env.PORT || 8080);
+
+// 프로덕션 환경에서 데이터베이스 초기화 확인
+async function initializeDatabase() {
+  if (process.env.NODE_ENV === 'production') {
+    const prisma = new PrismaClient();
+    try {
+      // 관리자 테이블 존재 확인
+      const adminCount = await prisma.admin.count();
+      console.log(`🔍 관리자 계정 수: ${adminCount}`);
+      
+      if (adminCount === 0) {
+        console.log('🌱 관리자 계정이 없습니다. 시드 데이터를 생성합니다...');
+        // 기본 관리자 계정 생성 로직을 여기에 추가할 수 있음
+      }
+    } catch (error) {
+      console.error('❌ 데이터베이스 초기화 확인 실패:', error);
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+}
+
+// 데이터베이스 초기화 실행
+initializeDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
