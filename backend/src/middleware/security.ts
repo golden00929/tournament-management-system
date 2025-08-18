@@ -83,6 +83,7 @@ export const corsConfig = cors({
     // 프로덕션 환경에서는 화이트리스트 도메인만 허용
     const allowedOrigins = [
       env.CLIENT_URL,
+      'https://magnificent-entremet-27d825.netlify.app',
       'https://your-frontend-domain.com',
       'https://www.your-frontend-domain.com'
     ];
