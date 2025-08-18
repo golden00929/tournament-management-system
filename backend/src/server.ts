@@ -94,6 +94,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// DATABASE_URL 디버깅을 위한 임시 엔드포인트
+app.get('/api/debug/env', (req, res) => {
+  res.status(200).json({
+    NODE_ENV: process.env.NODE_ENV,
+    DATABASE_URL_PREFIX: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'NOT_SET',
+    DATABASE_TYPE: process.env.DATABASE_URL?.includes('postgresql') ? 'PostgreSQL' : 
+                   process.env.DATABASE_URL?.includes('file:') ? 'SQLite' : 'Unknown',
+    PORT: process.env.PORT,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API routes with caching
 app.use('/api/auth', authRoutes);
 app.use('/api/player-auth', playerAuthRoutes);
