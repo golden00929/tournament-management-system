@@ -89,35 +89,77 @@ const TournamentBracketTree: React.FC<TournamentBracketTreeProps> = ({
           alignItems: 'center'
         }}
       >
-        {/* Connection lines */}
+        {/* Enhanced Connection lines */}
         {roundIndex > 0 && (
-          <Box
-            sx={{
-              position: 'absolute',
-              left: -60,
-              top: '50%',
-              width: 60,
-              height: 2,
-              backgroundColor: 'divider',
-              transform: 'translateY(-50%)',
-              zIndex: 0
-            }}
-          />
+          <>
+            {/* Left horizontal line */}
+            <Box
+              sx={{
+                position: 'absolute',
+                left: -40,
+                top: '50%',
+                width: 30,
+                height: 2,
+                backgroundColor: match.winnerId ? 'success.main' : 'divider',
+                transform: 'translateY(-50%)',
+                zIndex: 0,
+                borderRadius: 1,
+                opacity: 0.8
+              }}
+            />
+            {/* Left connecting vertical line (for pairing matches) */}
+            {matchIndex % 2 === 0 && round.matches.length > 1 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  left: -40,
+                  top: matchIndex === round.matches.length - 1 ? '-50%' : '50%',
+                  width: 2,
+                  height: '100%',
+                  backgroundColor: 'divider',
+                  zIndex: 0,
+                  borderRadius: 1,
+                  opacity: 0.6
+                }}
+              />
+            )}
+          </>
         )}
         
         {roundIndex < rounds.length - 1 && (
-          <Box
-            sx={{
-              position: 'absolute',
-              right: -60,
-              top: '50%',
-              width: 60,
-              height: 2,
-              backgroundColor: 'divider',
-              transform: 'translateY(-50%)',
-              zIndex: 0
-            }}
-          />
+          <>
+            {/* Right horizontal line */}
+            <Box
+              sx={{
+                position: 'absolute',
+                right: -40,
+                top: '50%',
+                width: 30,
+                height: 2,
+                backgroundColor: match.winnerId ? 'success.main' : 'divider',
+                transform: 'translateY(-50%)',
+                zIndex: 0,
+                borderRadius: 1,
+                opacity: 0.8
+              }}
+            />
+            {/* Right connecting vertical line (for pairing matches) */}
+            {matchIndex % 2 === 0 && round.matches.length > 1 && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  right: -40,
+                  top: matchIndex === round.matches.length - 1 ? '-50%' : '50%',
+                  width: 2,
+                  height: '100%',
+                  backgroundColor: 'divider',
+                  zIndex: 0,
+                  borderRadius: 1,
+                  opacity: 0.6
+                }}
+              />
+            )}
+          </>
         )}
 
         <Paper
@@ -244,7 +286,7 @@ const TournamentBracketTree: React.FC<TournamentBracketTreeProps> = ({
     const isFinal = round.roundName === 'Final';
     
     return (
-      <Box key={round.roundName} sx={{ display: 'flex', flexDirection: 'column', mx: 4 }}>
+      <Box key={round.roundName} sx={{ display: 'flex', flexDirection: 'column', mx: 6 }}>
         {/* Round header */}
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2 }}>
           {isFinal && <EmojiEvents sx={{ mr: 1, color: 'gold' }} />}
@@ -259,7 +301,7 @@ const TournamentBracketTree: React.FC<TournamentBracketTreeProps> = ({
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center',
-            gap: 3,
+            gap: roundIndex === 0 ? 2 : roundIndex === 1 ? 4 : 6,
             minHeight: '400px',
             justifyContent: 'space-around'
           }}
