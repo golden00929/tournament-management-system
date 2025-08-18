@@ -1,25 +1,23 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../config/database';
-import { generateToken } from '../utils/jwt';
+import { generateTokenPair, verifyRefreshToken, JwtPayload } from '../utils/jwt';
 import { authenticate, AuthRequest } from '../middleware/auth';
+import { env } from '../config/environment';
+import { asyncHandler } from '../middleware/errorHandler';
+import { ValidationError, AuthError, NotFoundError, SystemError } from '../utils/AppError';
 
 const router = express.Router();
 
 // Admin login
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    console.log('🔐 Login attempt:', { email, passwordLength: password?.length });
+router.post('/login', asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  console.log('🔐 Login attempt:', { email, passwordLength: password?.length });
 
-    if (!email || !password) {
-      console.log('❌ Missing credentials');
-      return res.status(400).json({
-        success: false,
-        message: '이메일과 비밀번호를 입력해주세요.',
-        error: 'MISSING_CREDENTIALS'
-      });
-    }
+  if (!email || !password) {
+    console.log('❌ Missing credentials');
+    throw new ValidationError('이메일과 비밀번호를 입력해주세요.');
+  }
 
     // Find admin user
     const admin = await prisma.admin.findUnique({
@@ -43,11 +41,7 @@ router.post('/login', async (req, res) => {
 
     if (!admin || !admin.isActive) {
       console.log('❌ Admin not found or inactive');
-      return res.status(401).json({
-        success: false,
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-        error: 'INVALID_CREDENTIALS'
-      });
+      throw AuthError.loginFailed();
     }
 
     // Verify password
@@ -55,25 +49,24 @@ router.post('/login', async (req, res) => {
     
     if (!passwordMatch) {
       console.log('❌ Password mismatch');
-      return res.status(401).json({
-        success: false,
-        message: '이메일 또는 비밀번호가 올바르지 않습니다.',
-        error: 'INVALID_CREDENTIALS'
-      });
+      throw AuthError.loginFailed();
     }
 
-    // Generate JWT token
-    const token = generateToken({
+    // Generate JWT token pair (access + refresh)
+    const tokenPair = generateTokenPair({
       userId: admin.id,
       email: admin.email,
       role: admin.role,
+      name: admin.name,
     });
 
     res.json({
       success: true,
       message: '로그인에 성공했습니다.',
       data: {
-        token,
+        accessToken: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+        expiresIn: tokenPair.expiresIn,
         user: {
           id: admin.id,
           email: admin.email,
@@ -82,79 +75,50 @@ router.post('/login', async (req, res) => {
         }
       }
     });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: '로그인 중 오류가 발생했습니다.',
-      error: 'LOGIN_ERROR'
-    });
-  }
-});
+}));
 
 // Get current user info
-router.get('/me', authenticate, async (req: AuthRequest, res) => {
-  try {
-    const admin = await prisma.admin.findUnique({
-      where: { id: req.user!.userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-      }
-    });
-
-    if (!admin) {
-      return res.status(404).json({
-        success: false,
-        message: '사용자 정보를 찾을 수 없습니다.',
-        error: 'USER_NOT_FOUND'
-      });
+router.get('/me', authenticate, asyncHandler(async (req: AuthRequest, res) => {
+  const admin = await prisma.admin.findUnique({
+    where: { id: req.user!.userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
     }
+  });
+
+  if (!admin) {
+    throw NotFoundError.admin(req.user!.userId);
+  }
 
     res.json({
       success: true,
       data: admin
     });
-  } catch (error) {
-    console.error('Get user info error:', error);
-    res.status(500).json({
-      success: false,
-      message: '사용자 정보 조회 중 오류가 발생했습니다.',
-      error: 'GET_USER_ERROR'
-    });
-  }
-});
+}));
 
 // Create initial admin account (only if no admins exist)
-router.post('/init-admin', async (req, res) => {
-  try {
-    // Check if any admin exists
-    const adminCount = await prisma.admin.count();
-    if (adminCount > 0) {
-      return res.status(409).json({
-        success: false,
-        message: '이미 관리자 계정이 존재합니다.',
-        error: 'ADMIN_EXISTS'
-      });
-    }
+router.post('/init-admin', asyncHandler(async (req, res) => {
+  // Check if any admin exists
+  const adminCount = await prisma.admin.count();
+  if (adminCount > 0) {
+    throw new ValidationError('이미 관리자 계정이 존재합니다.', { adminCount });
+  }
 
-    const { email, password, name } = req.body;
+  const { email, password, name } = req.body;
 
-    if (!email || !password || !name) {
-      return res.status(400).json({
-        success: false,
-        message: '필수 정보를 모두 입력해주세요.',
-        error: 'MISSING_FIELDS'
-      });
-    }
+  if (!email || !password || !name) {
+    throw new ValidationError('필수 정보를 모두 입력해주세요.', {
+      missingFields: { email: !email, password: !password, name: !name }
+    });
+  }
 
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    // Hash password using environment config
+    const hashedPassword = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
 
     // Create admin
     const admin = await prisma.admin.create({
@@ -178,38 +142,74 @@ router.post('/init-admin', async (req, res) => {
       message: '관리자 계정이 생성되었습니다.',
       data: admin
     });
-  } catch (error) {
-    console.error('Init admin error:', error);
-    res.status(500).json({
-      success: false,
-      message: '관리자 계정 생성 중 오류가 발생했습니다.',
-      error: 'INIT_ADMIN_ERROR'
-    });
-  }
-});
+}));
 
-// Refresh token (extend current session)
-router.post('/refresh', authenticate, async (req: AuthRequest, res) => {
-  try {
-    const newToken = generateToken({
-      userId: req.user!.userId,
-      email: req.user!.email,
-      role: req.user!.role,
-    });
-
-    res.json({
-      success: true,
-      message: '토큰이 갱신되었습니다.',
-      data: { token: newToken }
-    });
-  } catch (error) {
-    console.error('Refresh token error:', error);
-    res.status(500).json({
-      success: false,
-      message: '토큰 갱신 중 오류가 발생했습니다.',
-      error: 'REFRESH_TOKEN_ERROR'
-    });
+/**
+ * 리프레시 토큰을 사용한 액세스 토큰 갱신
+ * 더 이상 인증 미들웨어를 사용하지 않고, 리프레시 토큰으로만 검증합니다.
+ */
+router.post('/refresh', asyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+  
+  if (!refreshToken) {
+    throw new ValidationError('리프레시 토큰이 필요합니다.');
   }
-});
+
+  // 리프레시 토큰 검증
+  const decoded = verifyRefreshToken(refreshToken);
+  
+  // 사용자가 여전히 존재하고 활성화되어 있는지 확인
+  let user: any = null;
+  
+  if (decoded.role === 'admin') {
+    user = await prisma.admin.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+      }
+    });
+  } else if (decoded.role === 'player') {
+    user = await prisma.player.findUnique({
+      where: { id: decoded.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        isActive: true,
+        isVerified: true,
+      }
+    });
+    
+    if (user) {
+      user.role = 'player';
+    }
+  }
+
+  if (!user || !user.isActive) {
+    throw new AuthError('유효하지 않은 사용자입니다.', 401, 'INVALID_USER');
+  }
+
+  // 새로운 토큰 쌍 생성
+  const newTokenPair = generateTokenPair({
+    userId: user.id,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+  });
+
+  res.json({
+    success: true,
+    message: '토큰이 갱신되었습니다.',
+    data: {
+      accessToken: newTokenPair.accessToken,
+      refreshToken: newTokenPair.refreshToken,
+      expiresIn: newTokenPair.expiresIn
+    }
+  });
+}));
 
 export default router;

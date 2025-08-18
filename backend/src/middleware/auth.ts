@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken, JwtPayload } from '../utils/jwt';
+import { verifyAccessToken, JwtPayload, isTokenExpiringSoon } from '../utils/jwt';
 import { prisma } from '../config/database';
+import { env } from '../config/environment';
 
 export interface AuthRequest extends Request {
   user?: JwtPayload & {
@@ -36,8 +37,15 @@ export const authenticate = async (
     console.log('Token extracted, length:', token.length);
     
     try {
-      const decoded = verifyToken(token);
+      const decoded = verifyAccessToken(token);
       console.log('Token decoded successfully:', decoded.userId);
+      
+      // 토큰이 곧 만료되는지 확인 (15분 이내)
+      if (isTokenExpiringSoon(token)) {
+        console.log('토큰이 곧 만료됩니다:', decoded.userId);
+        // 헤더에 토큰 갱신 필요 신호를 추가
+        res.setHeader('X-Token-Refresh-Required', 'true');
+      }
       
       // Verify user still exists and is active (admin or player)
       let user: any = null;

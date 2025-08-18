@@ -2,7 +2,8 @@ import express from 'express';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { prisma } from '../config/database';
-import { generateToken } from '../utils/jwt';
+import { generateTokenPair } from '../utils/jwt';
+import { env } from '../config/environment';
 
 const router = express.Router();
 
@@ -40,8 +41,8 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // 비밀번호 해시화
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // 비밀번호 해시화 (환경변수 사용)
+    const hashedPassword = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
     const verifyToken = uuidv4();
 
     // 선수 정보 업데이트
@@ -139,8 +140,8 @@ router.post('/login', async (req, res) => {
       data: { lastLoginAt: new Date() }
     });
 
-    // JWT 토큰 생성
-    const token = generateToken({
+    // JWT 토큰 쌍 생성 (액세스 + 리프레시)
+    const tokenPair = generateTokenPair({
       userId: player.id,
       email: player.email,
       role: 'player',
@@ -153,7 +154,9 @@ router.post('/login', async (req, res) => {
       success: true,
       message: '로그인되었습니다.',
       data: {
-        token,
+        accessToken: tokenPair.accessToken,
+        refreshToken: tokenPair.refreshToken,
+        expiresIn: tokenPair.expiresIn,
         player: {
           id: player.id,
           name: player.name,
@@ -278,7 +281,7 @@ router.post('/forgot-password', async (req, res) => {
       success: true,
       message: '비밀번호 재설정 링크가 이메일로 전송되었습니다.',
       // 개발 환경에서만 토큰 반환
-      ...(process.env.NODE_ENV === 'development' && { resetToken })
+      ...(env.NODE_ENV === 'development' && { resetToken })
     });
 
   } catch (error) {
@@ -322,8 +325,8 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
-    // 새 비밀번호 해시화
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
+    // 새 비밀번호 해시화 (환경변수 사용)
+    const hashedPassword = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS);
 
     // 비밀번호 업데이트
     await prisma.player.update({
