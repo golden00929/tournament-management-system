@@ -34,7 +34,13 @@ import setupRoutes from './routes/setup';
 import { initializeSocketServer } from './websocket/socketServer';
 
 // Load environment variables
-dotenv.config();
+if (process.env.NODE_ENV === 'production') {
+  dotenv.config({ path: '.env.production' });
+  console.log('🚀 Production 환경변수 로드됨');
+} else {
+  dotenv.config();
+  console.log('🔧 Development 환경변수 로드됨');
+}
 
 // Railway 환경에서 DATABASE_URL 강제 설정
 if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('file:')) {
