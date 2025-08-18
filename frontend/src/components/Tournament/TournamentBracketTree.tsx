@@ -108,12 +108,12 @@ const TournamentBracketTree: React.FC<TournamentBracketTreeProps> = ({
               }}
             />
             {/* Left connecting vertical line (for pairing matches) */}
-            {matchIndex % 2 === 0 && round.matches.length > 1 && (
+            {matchIndex % 2 === 0 && rounds[roundIndex].matches.length > 1 && (
               <Box
                 sx={{
                   position: 'absolute',
                   left: -40,
-                  top: matchIndex === round.matches.length - 1 ? '-50%' : '50%',
+                  top: matchIndex === rounds[roundIndex].matches.length - 1 ? '-50%' : '50%',
                   width: 2,
                   height: '100%',
                   backgroundColor: 'divider',
@@ -144,12 +144,12 @@ const TournamentBracketTree: React.FC<TournamentBracketTreeProps> = ({
               }}
             />
             {/* Right connecting vertical line (for pairing matches) */}
-            {matchIndex % 2 === 0 && round.matches.length > 1 && (
+            {matchIndex % 2 === 0 && rounds[roundIndex].matches.length > 1 && (
               <Box
                 sx={{
                   position: 'absolute',
                   right: -40,
-                  top: matchIndex === round.matches.length - 1 ? '-50%' : '50%',
+                  top: matchIndex === rounds[roundIndex].matches.length - 1 ? '-50%' : '50%',
                   width: 2,
                   height: '100%',
                   backgroundColor: 'divider',
