@@ -1,12 +1,21 @@
 [build]
   base = "frontend"
   publish = "build"
-  command = "npm install --legacy-peer-deps && CI=false npm run build"
+  command = "npm install --legacy-peer-deps && npm run build:netlify"
 
 [build.environment]
   NODE_VERSION = "18"
   NPM_VERSION = "9"
   CI = "false"
+  NODE_OPTIONS = "--max-old-space-size=4096 --no-warnings"
+  GENERATE_SOURCEMAP = "false"
+  DISABLE_ESLINT_PLUGIN = "true"
+  SKIP_PREFLIGHT_CHECK = "true"
+  REACT_APP_API_URL = "https://tournament-management-system-production.up.railway.app/api"
+  # Build timeout optimization
+  npm_config_fund = "false"
+  npm_config_audit = "false"
+  NETLIFY_BUILD_DEBUG = "true"
 
 [[redirects]]
   from = "/*"
@@ -21,3 +30,21 @@
 
 [context.branch-deploy]
   environment = { NODE_ENV = "development" }
+
+# Post-processing optimization
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = false
+
+[build.processing.images]
+  compress = true

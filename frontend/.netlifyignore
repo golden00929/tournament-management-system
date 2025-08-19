@@ -1,0 +1,22 @@
+# Netlify build optimization - ignore unnecessary files
+node_modules/
+src/
+public/
+*.md
+README.md
+.git/
+.gitignore
+.env.local
+.env.development
+.env.test
+.eslintcache
+*.log
+coverage/
+.nyc_output/
+docs/
+*.spec.js
+*.test.js
+__tests__/
+tests/
+.storybook/
+stories/

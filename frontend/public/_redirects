@@ -1,1 +1,5 @@
+# Redirect all requests to index.html for client-side routing
 /*    /index.html   200
+
+# API proxy (fallback for development)
+/api/*  https://tournament-management-system-production.up.railway.app/api/:splat  200
