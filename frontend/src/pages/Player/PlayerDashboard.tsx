@@ -311,7 +311,7 @@ const PlayerDashboard: React.FC = () => {
                   <Stack spacing={1}>
                     <Stack direction="row" justifyContent="space-between">
                       <Typography variant="body2" color={darkTheme.text.secondary}>
-                        경기
+                        {t('dashboard.matches')}
                       </Typography>
                       <Typography variant="body2" fontWeight="600" color={darkTheme.text.primary}>
                         {profile?.totalMatches || 0}
@@ -319,7 +319,7 @@ const PlayerDashboard: React.FC = () => {
                     </Stack>
                     <Stack direction="row" justifyContent="space-between">
                       <Typography variant="body2" color={darkTheme.text.secondary}>
-                        승률
+                        {t('dashboard.winRate')}
                       </Typography>
                       <Typography variant="body2" fontWeight="600" color={darkTheme.accent.success}>
                         {profile?.totalMatches && profile.totalMatches > 0 
@@ -451,7 +451,7 @@ const PlayerDashboard: React.FC = () => {
                   }
                 }}
               >
-                모든 신청 보기
+{t('dashboard.viewAllApplications')}
               </Button>
               {applications.some(app => app.approvalStatus === 'approved') && (
                 <Button
@@ -465,7 +465,7 @@ const PlayerDashboard: React.FC = () => {
                     }
                   }}
                 >
-                  내 경기
+{t('dashboard.myMatches')}
                 </Button>
               )}
             </Stack>
@@ -483,7 +483,7 @@ const PlayerDashboard: React.FC = () => {
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
               <CalendarIcon sx={{ color: darkTheme.accent.secondary }} />
               <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
-                다가오는 경기
+{t('dashboard.upcomingMatches')}
               </Typography>
             </Stack>
             
@@ -500,7 +500,7 @@ const PlayerDashboard: React.FC = () => {
                 border: `1px solid ${alpha(darkTheme.accent.secondary, 0.2)}`
               }}>
                 <Typography variant="body2" color={darkTheme.text.secondary}>
-                  예정된 경기가 없습니다
+{t('dashboard.noUpcomingMatches')}
                 </Typography>
               </Box>
             ) : (
@@ -554,7 +554,7 @@ const PlayerDashboard: React.FC = () => {
               }}
               onClick={() => navigate('/player/matches')}
             >
-              모든 경기 보기
+{t('dashboard.viewAllMatches')}
             </Button>
           </CardContent>
         </Card>
@@ -570,7 +570,7 @@ const PlayerDashboard: React.FC = () => {
             <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
               <SearchIcon sx={{ color: darkTheme.accent.gold }} />
               <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
-                참가 가능한 대회
+{t('dashboard.availableTournaments')}
               </Typography>
             </Stack>
             
@@ -587,7 +587,7 @@ const PlayerDashboard: React.FC = () => {
                 border: `1px solid ${alpha(darkTheme.accent.gold, 0.2)}`
               }}>
                 <Typography variant="body2" color={darkTheme.text.secondary}>
-                  현재 참가 가능한 대회가 없습니다
+{t('dashboard.noAvailableTournaments')}
                 </Typography>
               </Box>
             ) : (
@@ -647,7 +647,7 @@ const PlayerDashboard: React.FC = () => {
               }}
               onClick={() => navigate('/player/tournaments')}
             >
-              대회 둘러보기
+{t('dashboard.browseTournaments')}
             </Button>
           </CardContent>
         </Card>

@@ -221,6 +221,19 @@
       "stability": "Tính ổn định"
     }
   },
+  "dashboard": {
+    "matches": "trận",
+    "winRate": "Tỷ lệ thắng",
+    "upcomingMatches": "Trận đấu sắp tới",
+    "noUpcomingMatches": "Không có trận đấu nào sắp tới",
+    "viewAllMatches": "Xem tất cả trận đấu",
+    "viewAllApplications": "Xem tất cả đăng ký",
+    "myMatches": "Trận đấu của tôi",
+    "availableTournaments": "Giải đấu có sẵn",
+    "noAvailableTournaments": "Hiện tại không có giải đấu nào có sẵn",
+    "browseTournaments": "Duyệt giải đấu"
+    }
+  },
   "tournament": {
     "status": {
       "draft": "Nháp",

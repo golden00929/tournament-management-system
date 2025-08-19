@@ -221,6 +221,19 @@
       "consistency": "안정성"
     }
   },
+  "dashboard": {
+    "matches": "경기",
+    "winRate": "승률",
+    "upcomingMatches": "다가오는 경기",
+    "noUpcomingMatches": "예정된 경기가 없습니다",
+    "viewAllMatches": "모든 경기 보기",
+    "viewAllApplications": "모든 신청 보기",
+    "myMatches": "내 경기",
+    "availableTournaments": "참가 가능한 대회",
+    "noAvailableTournaments": "현재 참가 가능한 대회가 없습니다",
+    "browseTournaments": "대회 둘러보기"
+    }
+  },
   "tournament": {
     "status": {
       "draft": "작성중",
