@@ -525,7 +525,7 @@ const PlayerDashboard: React.FC = () => {
                     <Stack spacing={0.5}>
                       {match.courtNumber && (
                         <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
-                          🏟️ 코트 {match.courtNumber}
+                          🏟️ {t('player.matches.court')} {match.courtNumber}
                         </Typography>
                       )}
                       {match.scheduledTime && (
@@ -679,7 +679,7 @@ const PlayerDashboard: React.FC = () => {
             >
               <SearchIcon fontSize="small" />
               <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                대회
+                {t('navigation.tournaments')}
               </Typography>
             </Button>
             <Button
@@ -695,7 +695,7 @@ const PlayerDashboard: React.FC = () => {
             >
               <TrophyIcon fontSize="small" />
               <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                신청
+                {t('navigation.applications')}
               </Typography>
             </Button>
             <Button
@@ -711,7 +711,7 @@ const PlayerDashboard: React.FC = () => {
             >
               <TrendingUpIcon fontSize="small" />
               <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                랭킹
+                {t('navigation.rankings')}
               </Typography>
             </Button>
             <Button
@@ -727,7 +727,7 @@ const PlayerDashboard: React.FC = () => {
             >
               <PersonIcon fontSize="small" />
               <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                프로필
+                {t('navigation.profile')}
               </Typography>
             </Button>
           </Stack>

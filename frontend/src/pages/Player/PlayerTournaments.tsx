@@ -204,7 +204,7 @@ const PlayerTournaments: React.FC = () => {
         }}>
           <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
             {t('player.tournaments.search', { defaultValue: 'Search Tournaments' })}
-        </Typography>
+          </Typography>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
           <Box sx={{ flex: '1 1 300px', minWidth: '200px' }}>
             <TextField
