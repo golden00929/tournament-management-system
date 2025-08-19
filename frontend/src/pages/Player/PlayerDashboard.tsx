@@ -146,11 +146,20 @@ const PlayerDashboard: React.FC = () => {
   }
 
   if (profileError) {
+    // 401 에러인 경우 apiSlice에서 자동으로 리다이렉트 처리됨
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="error">
           {t('common.errorLoadingProfile', { defaultValue: 'Failed to load profile information. Please login again.' })}
         </Alert>
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/player/login', { replace: true })}
+          >
+            {t('navigation.backToLogin', { defaultValue: 'Back to Login' })}
+          </Button>
+        </Box>
       </Container>
     );
   }

@@ -85,10 +85,10 @@ function validateEnvironment(): EnvironmentConfig {
     // 데이터베이스 설정
     DATABASE_URL: process.env.DATABASE_URL!,
     
-    // JWT 보안 설정 (1시간 액세스 토큰, 7일 리프레시 토큰)
+    // JWT 보안 설정 (개발환경: 24시간, 프로덕션: 1시간 액세스 토큰, 7일 리프레시 토큰)
     JWT_SECRET: process.env.JWT_SECRET!,
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET!,
-    JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || '1h',
+    JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || (process.env.NODE_ENV === 'development' ? '24h' : '1h'),
     JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
     
     // 관리자 계정 설정

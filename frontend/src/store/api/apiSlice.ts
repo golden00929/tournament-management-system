@@ -40,12 +40,44 @@ const baseQueryWithErrorHandling = async (args: any, api: any, extraOptions: any
   const result = await baseQueryWithAuth(args, api, extraOptions);
   
   if (result?.error?.status === 401) {
-    console.error('🚨 API 401 Error:', {
+    console.error('🚨 API 401 Error - Token expired or invalid:', {
       url: args.url || args,
       error: result.error,
       token: (api.getState() as RootState).auth.token ? 'Present in Redux' : 'Missing in Redux',
       localStorage: localStorage.getItem('token') ? 'Present in localStorage' : 'Missing in localStorage'
     });
+    
+    // 401 에러 시 로그아웃 처리
+    console.log('🔒 Clearing invalid authentication data');
+    
+    // localStorage 클리어
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    
+    // Redux store 클리어 (logout action 디스패치)
+    try {
+      const { logout } = await import('../slices/authSlice');
+      api.dispatch(logout());
+    } catch (error) {
+      console.error('Failed to dispatch logout action:', error);
+    }
+    
+    // storage 이벤트 발생
+    window.dispatchEvent(new Event('storage'));
+    
+    // 선수 로그인 페이지로 리다이렉트 (현재 URL이 선수 페이지인 경우)
+    if (window.location.pathname.startsWith('/player/')) {
+      console.log('🔀 Redirecting to player login due to 401');
+      setTimeout(() => {
+        window.location.href = '/player/login';
+      }, 100);
+    } else if (window.location.pathname !== '/login') {
+      // 관리자 페이지라면 관리자 로그인으로
+      console.log('🔀 Redirecting to admin login due to 401');
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 100);
+    }
   }
   
   return result;
