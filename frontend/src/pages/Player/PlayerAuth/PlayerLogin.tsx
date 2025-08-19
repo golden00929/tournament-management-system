@@ -155,6 +155,12 @@ const PlayerLogin: React.FC = () => {
 
         localStorage.setItem('token', result.data.accessToken);
         localStorage.setItem('user', JSON.stringify(userData));
+        
+        // 리프레시 토큰도 저장 (자동 갱신용)
+        if (result.data.refreshToken) {
+          localStorage.setItem('refreshToken', result.data.refreshToken);
+          console.log('💾 PlayerLogin: Refresh token saved for auto-refresh');
+        }
 
         // localStorage 변경 이벤트 강제 발생 (같은 탭에서는 자동으로 발생하지 않음)
         window.dispatchEvent(new Event('storage'));

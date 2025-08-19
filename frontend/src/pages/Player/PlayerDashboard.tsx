@@ -36,12 +36,16 @@ import {
 } from '../../store/api/playerApiSlice';
 import { logout } from '../../store/slices/authSlice';
 import { getValidUser, getValidToken } from '../../utils/localStorage';
+import useTokenRefresh from '../../hooks/useTokenRefresh';
 
 const PlayerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   useTheme(); // Hook을 최상단으로 이동
+  
+  // 토큰 자동 갱신 기능 활성화
+  useTokenRefresh();
 
   // 로그인 확인 - 한 번만 실행
   useEffect(() => {
@@ -89,6 +93,7 @@ const PlayerDashboard: React.FC = () => {
   const handleLogout = () => {
     dispatch(logout());
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
     navigate('/player/login');
   };

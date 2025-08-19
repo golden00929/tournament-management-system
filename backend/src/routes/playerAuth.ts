@@ -491,4 +491,74 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+// 토큰 갱신 (선수용)
+router.post('/refresh', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const refreshToken = authHeader && authHeader.startsWith('Bearer ') 
+      ? authHeader.slice(7) 
+      : req.body.refreshToken;
+
+    if (!refreshToken) {
+      return res.status(401).json({
+        success: false,
+        message: '리프레시 토큰이 필요합니다.',
+        error: 'MISSING_REFRESH_TOKEN'
+      });
+    }
+
+    // 리프레시 토큰 검증
+    const { verifyRefreshToken, generateTokenPair } = await import('../utils/jwt');
+    
+    const decoded = verifyRefreshToken(refreshToken);
+    
+    // 선수 존재 확인
+    const player = await prisma.player.findUnique({
+      where: { id: decoded.userId }
+    });
+
+    if (!player || !player.isVerified) {
+      return res.status(401).json({
+        success: false,
+        message: '유효하지 않은 사용자입니다.',
+        error: 'INVALID_USER'
+      });
+    }
+
+    // 새로운 토큰 쌍 생성
+    const newTokenPair = generateTokenPair({
+      userId: player.id,
+      email: player.email,
+      role: 'player',
+      name: player.name
+    });
+
+    console.log('✅ Player token refreshed successfully for:', player.email);
+
+    res.json({
+      success: true,
+      message: '토큰이 성공적으로 갱신되었습니다.',
+      data: {
+        accessToken: newTokenPair.accessToken,
+        refreshToken: newTokenPair.refreshToken,
+        expiresIn: newTokenPair.expiresIn,
+        user: {
+          id: player.id,
+          email: player.email,
+          name: player.name,
+          role: 'player'
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Player token refresh error:', error);
+    res.status(401).json({
+      success: false,
+      message: '토큰 갱신에 실패했습니다.',
+      error: 'TOKEN_REFRESH_FAILED'
+    });
+  }
+});
+
 export default router;

@@ -17,10 +17,16 @@ export interface JwtPayload {
 }
 
 /**
- * 액세스 토큰 생성 (1시간 만료)
- * 일반적인 API 요청에 사용됩니다.
+ * 액세스 토큰 생성 (역할에 따라 다른 만료 시간)
+ * 관리자: 2시간, 선수: 12시간 (프로덕션 기준)
  */
 export const generateAccessToken = (payload: JwtPayload): string => {
+  // 선수용 토큰은 더 긴 만료 시간 적용
+  const isPlayer = payload.role === 'player';
+  const expiresIn = isPlayer 
+    ? (process.env.NODE_ENV === 'development' ? '24h' : '12h') // 선수용: 12시간
+    : env.JWT_ACCESS_EXPIRES_IN; // 관리자용: 기본 설정 (2시간)
+
   return jwt.sign(
     { 
       userId: payload.userId, 
@@ -31,7 +37,7 @@ export const generateAccessToken = (payload: JwtPayload): string => {
     },
     env.JWT_SECRET,
     { 
-      expiresIn: env.JWT_ACCESS_EXPIRES_IN, // 1시간
+      expiresIn,
       issuer: 'tournament-management-system',
       audience: 'tournament-users'
     }
