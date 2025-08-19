@@ -10,6 +10,7 @@ import http from 'http';
 import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
 import { setupSecurityMiddleware, loginRateLimit } from './middleware/security';
 import { cacheTournamentData, cachePlayerData, cacheScheduleData, warmUpCache } from './middleware/cache';
+import { authenticate } from './middleware/auth';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -135,6 +136,22 @@ app.get('/api/debug/env', (req, res) => {
     PORT: process.env.PORT,
     JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN || 'NOT_SET',
     JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN || 'NOT_SET',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 인증 상태 디버깅을 위한 엔드포인트
+app.get('/api/debug/auth', authenticate, (req: any, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Authentication successful',
+    user: {
+      id: req.user.id,
+      email: req.user.email,
+      role: req.user.role,
+      name: req.user.name,
+      isActive: req.user.isActive
+    },
     timestamp: new Date().toISOString()
   });
 });
