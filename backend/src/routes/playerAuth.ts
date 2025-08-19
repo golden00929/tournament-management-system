@@ -7,8 +7,143 @@ import { env } from '../config/environment';
 
 const router = express.Router();
 
-// 회원가입 (기존 선수가 비밀번호 설정)
+// 회원가입 (새로운 선수 등록)
 router.post('/register', async (req, res) => {
+  try {
+    const { name, email, phone, birthYear, gender, province, district, password } = req.body;
+
+    // 필수 필드 검증
+    if (!name || !email || !phone || !birthYear || !gender || !province || !district || !password) {
+      return res.status(400).json({
+        success: false,
+        message: '모든 필수 정보를 입력해주세요.',
+        error: 'MISSING_FIELDS'
+      });
+    }
+
+    // 이메일 중복 체크
+    const existingPlayer = await prisma.player.findUnique({
+      where: { email }
+    });
+
+    if (existingPlayer) {
+      return res.status(400).json({
+        success: false,
+        message: '이미 사용 중인 이메일입니다.',
+        error: 'EMAIL_ALREADY_EXISTS'
+      });
+    }
+
+    // 이메일 형식 검증
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        message: '올바른 이메일 형식을 입력해주세요.',
+        error: 'INVALID_EMAIL_FORMAT'
+      });
+    }
+
+    // 전화번호 형식 검증 (10자리 숫자)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone.replace(/\s/g, ''))) {
+      return res.status(400).json({
+        success: false,
+        message: '전화번호는 10자리 숫자여야 합니다.',
+        error: 'INVALID_PHONE_FORMAT'
+      });
+    }
+
+    // 출생년도 검증
+    const currentYear = new Date().getFullYear();
+    if (birthYear < 1950 || birthYear > currentYear - 10) {
+      return res.status(400).json({
+        success: false,
+        message: `출생년도는 1950년 ~ ${currentYear - 10}년 사이여야 합니다.`,
+        error: 'INVALID_BIRTH_YEAR'
+      });
+    }
+
+    // 성별 검증
+    if (!['male', 'female'].includes(gender)) {
+      return res.status(400).json({
+        success: false,
+        message: '올바른 성별을 선택해주세요.',
+        error: 'INVALID_GENDER'
+      });
+    }
+
+    // 비밀번호 길이 검증
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: '비밀번호는 최소 6자 이상이어야 합니다.',
+        error: 'PASSWORD_TOO_SHORT'
+      });
+    }
+
+    // 비밀번호 해시화
+    const hashedPassword = await bcrypt.hash(password, env.BCRYPT_SALT_ROUNDS);
+    const verifyToken = uuidv4();
+
+    // 새로운 선수 생성
+    const newPlayer = await prisma.player.create({
+      data: {
+        name,
+        email,
+        phone,
+        birthYear,
+        gender,
+        province,
+        district,
+        password: hashedPassword,
+        verifyToken,
+        verifyTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24시간 후 만료
+        isVerified: true, // 개발 환경에서는 바로 인증 완료
+        eloRating: 1200, // 기본 ELO 레이팅
+        skillLevel: 'beginner', // 기본 실력 등급
+        registrationDate: new Date()
+      }
+    });
+
+    console.log('✅ 새로운 선수 등록 완료:', {
+      id: newPlayer.id,
+      name: newPlayer.name,
+      email: newPlayer.email,
+      province: newPlayer.province,
+      district: newPlayer.district
+    });
+
+    res.status(201).json({
+      success: true,
+      message: '회원가입이 완료되었습니다.',
+      data: {
+        id: newPlayer.id,
+        name: newPlayer.name,
+        email: newPlayer.email,
+        phone: newPlayer.phone,
+        gender: newPlayer.gender,
+        province: newPlayer.province,
+        district: newPlayer.district,
+        eloRating: newPlayer.eloRating,
+        skillLevel: newPlayer.skillLevel,
+        isVerified: newPlayer.isVerified,
+        registrationDate: newPlayer.registrationDate.toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({
+      success: false,
+      message: '회원가입 중 오류가 발생했습니다.',
+      error: 'REGISTER_ERROR'
+    });
+  }
+});
+
+// 기존 선수 비밀번호 설정 (관리자가 등록한 선수가 비밀번호 설정)
+router.post('/set-password', async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -58,7 +193,7 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: '회원가입이 완료되었습니다.',
+      message: '비밀번호 설정이 완료되었습니다.',
       data: {
         playerId: updatedPlayer.id,
         name: updatedPlayer.name,
@@ -68,11 +203,11 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Register error:', error);
+    console.error('Set password error:', error);
     res.status(500).json({
       success: false,
-      message: '회원가입 중 오류가 발생했습니다.',
-      error: 'REGISTER_ERROR'
+      message: '비밀번호 설정 중 오류가 발생했습니다.',
+      error: 'SET_PASSWORD_ERROR'
     });
   }
 });
