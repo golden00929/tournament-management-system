@@ -331,7 +331,7 @@ const PlayerDashboard: React.FC = () => {
                 </Box>
               </Stack>
               
-              {profile?.totalMatches && profile.totalMatches > 0 && (
+              {profile?.totalMatches > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <LinearProgress
                     variant="determinate"
