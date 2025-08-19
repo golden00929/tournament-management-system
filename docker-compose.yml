@@ -1,0 +1,142 @@
+# 🐳 Tournament Management System - Docker Compose
+# 전체 애플리케이션 스택을 한 번에 실행
+
+version: '3.8'
+
+services:
+  # 🗄️ PostgreSQL 데이터베이스
+  database:
+    image: postgres:15-alpine
+    container_name: tournament-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: tournament_db
+      POSTGRES_USER: tournament_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_2024}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tournament-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tournament_user -d tournament_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 🔴 Redis (캐싱 및 세션 스토어)
+  redis:
+    image: redis:7-alpine
+    container_name: tournament-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_secure_2024}
+    volumes:
+      - redis_data:/data
+    networks:
+      - tournament-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # 🚀 백엔드 API 서버
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tournament-backend
+    restart: unless-stopped
+    environment:
+      # 환경 설정
+      NODE_ENV: production
+      PORT: 5000
+      
+      # 데이터베이스 설정
+      DATABASE_URL: postgresql://tournament_user:${DB_PASSWORD:-secure_password_2024}@database:5432/tournament_db
+      
+      # JWT 보안 설정
+      JWT_SECRET: ${JWT_SECRET:-your-super-secure-jwt-secret-key-minimum-32-characters}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-your-super-secure-refresh-secret-different-from-jwt}
+      JWT_ACCESS_EXPIRES_IN: 1h
+      JWT_REFRESH_EXPIRES_IN: 7d
+      
+      # 관리자 계정
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@tournament.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123!@#secure}
+      
+      # 클라이언트 URL (CORS)
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+      
+      # 보안 설정
+      BCRYPT_SALT_ROUNDS: 10
+      SESSION_SECRET: ${SESSION_SECRET:-session-secret-key}
+      
+      # Redis 설정
+      REDIS_URL: redis://:${REDIS_PASSWORD:-redis_secure_2024}@redis:6379
+      
+      # 파일 업로드 설정
+      MAX_FILE_SIZE: 10MB
+      UPLOAD_DIR: uploads
+    ports:
+      - "5000:5000"
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - tournament-network
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # 🌐 프론트엔드 (React + Nginx)
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tournament-frontend
+    restart: unless-stopped
+    environment:
+      REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000}
+      REACT_APP_ENV: production
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - tournament-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# 📁 볼륨 설정
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_uploads:
+    driver: local
+
+# 🌐 네트워크 설정
+networks:
+  tournament-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,3 +1,8 @@
+/* Reset and base styles */
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +10,75 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #fafafa;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Tournament bracket specific styles */
+.tournament-bracket {
+  overflow-x: auto;
+  padding: 20px;
+}
+
+.bracket-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 40px;
+}
+
+.bracket-match {
+  margin: 10px 0;
+  position: relative;
+}
+
+/* Connection lines for tournament brackets */
+.bracket-line {
+  position: absolute;
+  background-color: #e0e0e0;
+  border-radius: 1px;
+}
+
+.bracket-line.winner {
+  background-color: #4caf50;
+}
+
+/* Responsive design helpers */
+@media (max-width: 768px) {
+  .tournament-bracket {
+    padding: 10px;
+  }
+  
+  .bracket-round {
+    margin: 0 20px;
+  }
+}
+
+/* Animation classes */
+.match-update-animation {
+  animation: matchUpdate 0.3s ease-in-out;
+}
+
+@keyframes matchUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.winner-highlight {
+  animation: winnerGlow 0.5s ease-in-out;
+}
+
+@keyframes winnerGlow {
+  0% { box-shadow: 0 0 0 rgba(76, 175, 80, 0); }
+  50% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.5); }
+  100% { box-shadow: 0 0 0 rgba(76, 175, 80, 0); }
 }

@@ -7,8 +7,8 @@ import rateLimit from 'express-rate-limit';
 import http from 'http';
 
 // Import middleware
-import { errorHandler } from './middleware/errorHandler';
-import { notFound } from './middleware/notFound';
+import { globalErrorHandler, notFoundHandler } from './middleware/errorHandler';
+import { setupSecurityMiddleware, loginRateLimit } from './middleware/security';
 import { cacheTournamentData, cachePlayerData, cacheScheduleData, warmUpCache } from './middleware/cache';
 
 // Import routes
@@ -32,42 +32,51 @@ import setupRoutes from './routes/setup';
 
 // Import WebSocket server
 import { initializeSocketServer } from './websocket/socketServer';
+import { PrismaClient } from '@prisma/client';
 
 // Load environment variables
 dotenv.config();
+
+// Railway 프로덕션 환경에서 DATABASE_URL 강제 설정
+if (process.env.NODE_ENV === 'production' && !process.env.DATABASE_URL?.startsWith('postgresql://')) {
+  console.log('🔧 Railway 프로덕션 환경에서 PostgreSQL URL 강제 설정');
+  process.env.DATABASE_URL = 'postgresql://postgres:FaCBXbPHnJzjFrcFqOgzcnpamuQZcPti@trolley.proxy.rlwy.net:58884/railway';
+}
+
+console.log('🔧 환경변수 로드 완료:', process.env.NODE_ENV || 'development', '모드');
+console.log('📊 데이터베이스:', process.env.DATABASE_URL?.includes('postgresql') ? 'postgresql' : 'sqlite');
+console.log('🚀 서버 포트:', process.env.PORT || 8080);
+
+// 프로덕션 환경에서 데이터베이스 초기화 확인
+async function initializeDatabase() {
+  if (process.env.NODE_ENV === 'production') {
+    const prisma = new PrismaClient();
+    try {
+      // 관리자 테이블 존재 확인
+      const adminCount = await prisma.admin.count();
+      console.log(`🔍 관리자 계정 수: ${adminCount}`);
+      
+      if (adminCount === 0) {
+        console.log('🌱 관리자 계정이 없습니다. 시드 데이터를 생성합니다...');
+        // 기본 관리자 계정 생성 로직을 여기에 추가할 수 있음
+      }
+    } catch (error) {
+      console.error('❌ 데이터베이스 초기화 확인 실패:', error);
+    } finally {
+      await prisma.$disconnect();
+    }
+  }
+}
+
+// 데이터베이스 초기화 실행
+initializeDatabase();
 
 const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX || '100'), // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later',
-});
-
-// Security middleware
-app.use(helmet());
-app.use(limiter);
-
-// CORS configuration
-const corsOrigins = process.env.NODE_ENV === 'production' 
-  ? [process.env.CORS_ORIGIN || 'https://magnificent-entremet-27d825.netlify.app']
-  : [
-      'http://localhost:3000',
-      'http://localhost:3001', 
-      'http://localhost:3002'
-    ];
-
-app.use(cors({
-  origin: corsOrigins,
-  credentials: true,
-  optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  preflightContinue: false
-}));
+// Apply security middleware
+app.use(setupSecurityMiddleware());
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
@@ -116,6 +125,18 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// DATABASE_URL 디버깅을 위한 임시 엔드포인트
+app.get('/api/debug/env', (req, res) => {
+  res.status(200).json({
+    NODE_ENV: process.env.NODE_ENV,
+    DATABASE_URL_PREFIX: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'NOT_SET',
+    DATABASE_TYPE: process.env.DATABASE_URL?.includes('postgresql') ? 'PostgreSQL' : 
+                   process.env.DATABASE_URL?.includes('file:') ? 'SQLite' : 'Unknown',
+    PORT: process.env.PORT,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // API routes with caching
 app.use('/api/auth', authRoutes);
 app.use('/api/player-auth', playerAuthRoutes);
@@ -146,10 +167,10 @@ app.use('/api/setup', setupRoutes);
 app.use('/uploads', express.static('./uploads'));
 
 // 404 middleware
-app.use(notFound);
+app.use(notFoundHandler);
 
 // Error handling middleware
-app.use(errorHandler);
+app.use(globalErrorHandler);
 
 // Create HTTP server
 const server = http.createServer(app);

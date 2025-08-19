@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -9,6 +9,8 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { EmojiEvents } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
@@ -16,13 +18,26 @@ import { useLoginMutation } from '../../store/api/apiSlice';
 import { loginSuccess } from '../../store/slices/authSlice';
 
 const Login: React.FC = () => {
-  const [email, setEmail] = useState('admin@tournament.com');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('admin123!');
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const [login, { isLoading }] = useLoginMutation();
+
+  useEffect(() => {
+    // 저장된 이메일 불러오기
+    const savedEmail = localStorage.getItem('adminRememberedEmail');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberEmail(true);
+    } else {
+      // 기본값 설정
+      setEmail('admin@tournament.com');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,10 +46,20 @@ const Login: React.FC = () => {
     try {
       const result = await login({ email, password }).unwrap();
       console.log('Login result:', result);
-      console.log('Token received:', result.data?.token ? `${result.data.token.substring(0, 20)}...` : 'none');
-      console.log('Token length:', result.data?.token ? result.data.token.length : 0);
+      console.log('Token received:', result.data?.accessToken ? `${result.data.accessToken.substring(0, 20)}...` : 'none');
+      console.log('Token length:', result.data?.accessToken ? result.data.accessToken.length : 0);
+      
+      // 이메일 기억하기 처리
+      if (rememberEmail) {
+        localStorage.setItem('adminRememberedEmail', email);
+        console.log('💾 Admin Login: Email saved for next login');
+      } else {
+        localStorage.removeItem('adminRememberedEmail');
+        console.log('🗑️ Admin Login: Saved email removed');
+      }
+      
       dispatch(loginSuccess({
-        token: result.data.token,
+        token: result.data.accessToken,
         user: result.data.user
       }));
       navigate('/dashboard');
@@ -104,6 +129,28 @@ const Login: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
             />
+            
+            {/* 이메일 기억하기 체크박스 */}
+            <Box sx={{ mt: 1, mb: 1 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={rememberEmail}
+                    onChange={(e) => setRememberEmail(e.target.checked)}
+                    name="rememberEmail"
+                    color="primary"
+                  />
+                }
+                label="이메일 주소 기억하기"
+                sx={{ 
+                  color: 'text.secondary',
+                  '& .MuiFormControlLabel-label': {
+                    fontSize: '0.875rem'
+                  }
+                }}
+              />
+            </Box>
+            
             <Button
               type="submit"
               fullWidth

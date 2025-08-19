@@ -12,16 +12,13 @@ import {
   Chip,
   LinearProgress,
   Alert,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
   CircularProgress,
+  IconButton,
+  Stack,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import {
-  SportsHandball as SportsIcon,
   EmojiEvents as TrophyIcon,
   TrendingUp as TrendingUpIcon,
   CalendarToday as CalendarIcon,
@@ -44,6 +41,7 @@ const PlayerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  useTheme(); // Hook을 최상단으로 이동
 
   // 로그인 확인 - 한 번만 실행
   useEffect(() => {
@@ -55,7 +53,7 @@ const PlayerDashboard: React.FC = () => {
       navigate('/player/login', { replace: true });
       return;
     }
-  }, []); // 의존성 배열을 빈 배열로 변경하여 한 번만 실행
+  }, [navigate]); // navigate 의존성 추가
 
   // 사용자 인증 상태 확인
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -105,14 +103,6 @@ const PlayerDashboard: React.FC = () => {
     return levels[skillLevel as keyof typeof levels] || { label: skillLevel, color: 'default' as const };
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'success';
-      case 'pending': return 'warning';
-      case 'rejected': return 'error';
-      default: return 'default';
-    }
-  };
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -146,11 +136,20 @@ const PlayerDashboard: React.FC = () => {
   }
 
   if (profileError) {
+    // 401 에러인 경우 apiSlice에서 자동으로 리다이렉트 처리됨
     return (
       <Container maxWidth="lg" sx={{ py: 4 }}>
         <Alert severity="error">
           {t('common.errorLoadingProfile', { defaultValue: 'Failed to load profile information. Please login again.' })}
         </Alert>
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Button 
+            variant="contained" 
+            onClick={() => navigate('/player/login', { replace: true })}
+          >
+            {t('navigation.backToLogin', { defaultValue: 'Back to Login' })}
+          </Button>
+        </Box>
       </Container>
     );
   }
@@ -160,389 +159,576 @@ const PlayerDashboard: React.FC = () => {
   const availableTournaments = availableTournamentsData?.data?.tournaments || [];
   const upcomingMatches = matchesData?.data || [];
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* 헤더 */}
-      <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" fontWeight="bold" sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <SportsIcon fontSize="large" color="primary" />
-          {t('player.dashboard.title')}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <LanguageSelector />
-          <Button
-            variant="outlined"
-            color="inherit"
-            startIcon={<LogoutIcon />}
-            onClick={handleLogout}
-          >
-            {t('navigation.logout')}
-          </Button>
-        </Box>
-      </Box>
+  // 다크 그레이 테마 색상 정의
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e',
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6',
+      gold: '#ffd700',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+    },
+    card: {
+      elevated: '#252525',
+      hover: '#2a2a2a',
+    }
+  };
 
-      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-        {/* 프로필 카드 */}
-        <Box sx={{ flex: { md: '0 0 33.333%' } }}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent sx={{ textAlign: 'center', p: 3 }}>
-              <Avatar
-                sx={{
-                  width: 80,
-                  height: 80,
-                  mx: 'auto',
-                  mb: 2,
-                  bgcolor: 'primary.main',
-                  fontSize: '2rem',
-                }}
-              >
-                {profile?.name?.charAt(0)}
-              </Avatar>
-              
-              <Typography variant="h5" fontWeight="bold" gutterBottom>
+  return (
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+      color: darkTheme.text.primary,
+      pb: { xs: 10, sm: 4 }
+    }}>
+      {/* 모바일 헤더 */}
+      <Box sx={{ 
+        position: 'sticky',
+        top: 0,
+        zIndex: 10,
+        background: alpha(darkTheme.background.secondary, 0.95),
+        backdropFilter: 'blur(10px)',
+        borderBottom: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+        px: 2,
+        py: 1.5
+      }}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <Avatar sx={{ 
+              bgcolor: darkTheme.accent.primary,
+              width: 32,
+              height: 32,
+              fontSize: '1rem'
+            }}>
+              {profile?.name?.charAt(0)}
+            </Avatar>
+            <Box>
+              <Typography variant="body2" fontWeight="600" color={darkTheme.text.primary}>
                 {profile?.name}
               </Typography>
-              
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                {profile?.email}
+              <Typography variant="caption" color={darkTheme.text.secondary}>
+                ELO: {profile?.eloRating}
               </Typography>
+            </Box>
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <LanguageSelector />
+            <IconButton 
+              onClick={handleLogout}
+              sx={{ 
+                color: darkTheme.text.secondary,
+                '&:hover': { 
+                  bgcolor: alpha(darkTheme.text.secondary, 0.1),
+                  color: darkTheme.text.primary
+                }
+              }}
+            >
+              <LogoutIcon fontSize="small" />
+            </IconButton>
+          </Stack>
+        </Stack>
+      </Box>
 
-              <Chip
-                label={getSkillLevelDisplay(profile?.skillLevel || '').label}
-                color={getSkillLevelDisplay(profile?.skillLevel || '').color}
-                sx={{ mb: 2 }}
-              />
-
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="h6" color="primary" fontWeight="bold">
-                  {t('player.profile.eloRating')}
+      {/* 메인 콘텐츠 */}
+      <Container maxWidth="sm" sx={{ px: { xs: 2, sm: 3 }, pt: 2 }}>
+        {/* 프로필 요약 카드 */}
+        <Card sx={{ 
+          background: `linear-gradient(135deg, ${darkTheme.card.elevated} 0%, ${darkTheme.background.tertiary} 100%)`,
+          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          borderRadius: 3,
+          mb: 3,
+          overflow: 'hidden',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${darkTheme.accent.primary}, ${darkTheme.accent.secondary})`
+          }
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction="row" spacing={3} alignItems="center">
+              <Avatar sx={{ 
+                width: 60,
+                height: 60,
+                bgcolor: darkTheme.accent.primary,
+                fontSize: '1.5rem',
+                boxShadow: `0 0 20px ${alpha(darkTheme.accent.primary, 0.3)}`
+              }}>
+                {profile?.name?.charAt(0)}
+              </Avatar>
+              <Box sx={{ flex: 1 }}>
+                <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary} gutterBottom>
+                  {profile?.name}
                 </Typography>
-                <Typography variant="h4" fontWeight="bold">
-                  {profile?.eloRating}
+                <Chip
+                  label={getSkillLevelDisplay(profile?.skillLevel || '').label}
+                  size="small"
+                  sx={{ 
+                    bgcolor: alpha(darkTheme.accent.secondary, 0.2),
+                    color: darkTheme.accent.secondary,
+                    border: `1px solid ${alpha(darkTheme.accent.secondary, 0.3)}`,
+                    mb: 1
+                  }}
+                />
+                <Typography variant="body2" color={darkTheme.text.secondary}>
+                  {profile?.email}
                 </Typography>
               </Box>
-
-              <Divider sx={{ my: 2 }} />
-
-              <Box sx={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold">
-                    {profile?.totalMatches}
+            </Stack>
+            
+            {/* ELO 및 통계 */}
+            <Box sx={{ mt: 3, p: 2, bgcolor: alpha(darkTheme.background.primary, 0.5), borderRadius: 2 }}>
+              <Stack direction="row" spacing={2}>
+                <Box sx={{ flex: 1, textAlign: 'center' }}>
+                  <Typography variant="h4" fontWeight="bold" color={darkTheme.accent.gold}>
+                    {profile?.eloRating}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t('player.profile.totalMatches')}
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" color="success.main">
-                    {profile?.wins}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t('player.profile.wins')}
+                  <Typography variant="caption" color={darkTheme.text.secondary}>
+                    ELO RATING
                   </Typography>
                 </Box>
-                <Box>
-                  <Typography variant="h6" fontWeight="bold" color="error.main">
-                    {profile?.losses}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {t('player.profile.losses')}
-                  </Typography>
+                <Box sx={{ flex: 1 }}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color={darkTheme.text.secondary}>
+                        경기
+                      </Typography>
+                      <Typography variant="body2" fontWeight="600" color={darkTheme.text.primary}>
+                        {profile?.totalMatches || 0}
+                      </Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color={darkTheme.text.secondary}>
+                        승률
+                      </Typography>
+                      <Typography variant="body2" fontWeight="600" color={darkTheme.accent.success}>
+                        {profile?.totalMatches && profile.totalMatches > 0 
+                          ? `${((profile.wins / profile.totalMatches) * 100).toFixed(1)}%`
+                          : '0%'}
+                      </Typography>
+                    </Stack>
+                  </Stack>
                 </Box>
-              </Box>
-
+              </Stack>
+              
               {profile?.totalMatches && profile.totalMatches > 0 && (
                 <Box sx={{ mt: 2 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {t('player.profile.winRate')}: {((profile.wins / profile.totalMatches) * 100).toFixed(1)}%
-                  </Typography>
                   <LinearProgress
                     variant="determinate"
                     value={(profile.wins / profile.totalMatches) * 100}
-                    sx={{ height: 8, borderRadius: 4 }}
+                    sx={{ 
+                      height: 6,
+                      borderRadius: 3,
+                      bgcolor: alpha(darkTheme.text.secondary, 0.2),
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: darkTheme.accent.success,
+                        borderRadius: 3
+                      }
+                    }}
                   />
                 </Box>
               )}
+            </Box>
+          </CardContent>
+        </Card>
 
+        {/* 내 참가 신청 */}
+        <Card sx={{ 
+          background: darkTheme.card.elevated,
+          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          borderRadius: 3,
+          mb: 3
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+              <TrophyIcon sx={{ color: darkTheme.accent.primary }} />
+              <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
+                {t('player.applications.title')}
+              </Typography>
+            </Stack>
+            
+            {applicationsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress sx={{ color: darkTheme.accent.primary }} />
+              </Box>
+            ) : applications.length === 0 ? (
+              <Box sx={{ 
+                p: 3,
+                textAlign: 'center',
+                bgcolor: alpha(darkTheme.accent.warning, 0.1),
+                borderRadius: 2,
+                border: `1px solid ${alpha(darkTheme.accent.warning, 0.2)}`
+              }}>
+                <Typography variant="body2" color={darkTheme.text.secondary}>
+                  {t('player.applications.noApplications')}
+                </Typography>
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {applications.slice(0, 2).map((application, index) => (
+                  <Box 
+                    key={application.id}
+                    sx={{ 
+                      p: 2,
+                      bgcolor: alpha(darkTheme.background.primary, 0.3),
+                      borderRadius: 2,
+                      border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`
+                    }}
+                  >
+                    <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 1 }}>
+                      <Typography variant="subtitle2" fontWeight="600" color={darkTheme.text.primary} sx={{ flex: 1, mr: 1 }}>
+                        {application.tournament.name}
+                      </Typography>
+                      <Chip
+                        size="small"
+                        label={getStatusText(application.approvalStatus)}
+                        sx={{
+                          bgcolor: alpha(
+                            application.approvalStatus === 'approved' ? darkTheme.accent.success :
+                            application.approvalStatus === 'pending' ? darkTheme.accent.warning :
+                            darkTheme.accent.error, 0.2
+                          ),
+                          color: application.approvalStatus === 'approved' ? darkTheme.accent.success :
+                                 application.approvalStatus === 'pending' ? darkTheme.accent.warning :
+                                 darkTheme.accent.error,
+                          border: `1px solid ${alpha(
+                            application.approvalStatus === 'approved' ? darkTheme.accent.success :
+                            application.approvalStatus === 'pending' ? darkTheme.accent.warning :
+                            darkTheme.accent.error, 0.3
+                          )}`,
+                          fontSize: '0.7rem'
+                        }}
+                      />
+                    </Stack>
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                        📍 {application.tournament.location}
+                      </Typography>
+                      <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                        📅 {formatDate(application.tournament.startDate)}
+                      </Typography>
+                      <Typography variant="body2" color={darkTheme.accent.gold} sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                        💰 {formatCurrency(application.tournament.participantFee)}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            )}
+
+            <Stack direction="row" spacing={1} sx={{ mt: 3 }}>
               <Button
                 fullWidth
                 variant="outlined"
-                startIcon={<PersonIcon />}
-                sx={{ mt: 3 }}
-                onClick={() => navigate('/player/profile')}
+                onClick={() => navigate('/player/applications')}
+                sx={{
+                  borderColor: alpha(darkTheme.text.secondary, 0.3),
+                  color: darkTheme.text.secondary,
+                  '&:hover': {
+                    borderColor: darkTheme.accent.primary,
+                    color: darkTheme.accent.primary,
+                    bgcolor: alpha(darkTheme.accent.primary, 0.1)
+                  }
+                }}
               >
-                {t('common.editProfile', { defaultValue: 'Edit Profile' })}
+                모든 신청 보기
               </Button>
-            </CardContent>
-          </Card>
-        </Box>
+              {applications.some(app => app.approvalStatus === 'approved') && (
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={() => navigate('/player/matches')}
+                  sx={{
+                    bgcolor: darkTheme.accent.primary,
+                    '&:hover': {
+                      bgcolor: alpha(darkTheme.accent.primary, 0.8)
+                    }
+                  }}
+                >
+                  내 경기
+                </Button>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
 
-        {/* 우측 콘텐츠 */}
-        <Box sx={{ flex: 1 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* 내 참가 신청 */}
-            <Box>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <TrophyIcon color="primary" />
-                    {t('player.applications.title')}
-                  </Typography>
-                  
-                  {applicationsLoading ? (
-                    <CircularProgress />
-                  ) : applications.length === 0 ? (
-                    <Alert severity="info">
-                      {t('player.applications.noApplications')}
-                    </Alert>
-                  ) : (
-                    <List>
-                      {applications.slice(0, 3).map((application, index) => (
-                        <React.Fragment key={application.id}>
-                          {index > 0 && <Divider />}
-                          <ListItem>
-                            <ListItemIcon>
-                              <TrophyIcon color="primary" />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <Typography variant="subtitle1" fontWeight="bold">
-                                    {application.tournament.name}
-                                  </Typography>
-                                  <Chip
-                                    size="small"
-                                    label={getStatusText(application.approvalStatus)}
-                                    color={getStatusColor(application.approvalStatus)}
-                                  />
-                                </Box>
-                              }
-                              secondary={
-                                <Box>
-                                  <Typography variant="body2" color="text.secondary">
-                                    📍 {application.tournament.location}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    📅 {formatDate(application.tournament.startDate)}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    💰 {formatCurrency(application.tournament.participantFee)}
-                                  </Typography>
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                        </React.Fragment>
-                      ))}
-                    </List>
-                  )}
-
-                  <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                    <Button
-                      fullWidth
-                      variant="outlined"
-                      onClick={() => navigate('/player/applications')}
-                    >
-                      {t('player.applications.viewAll', { defaultValue: 'View All Applications' })}
-                    </Button>
-                    {applications.some(app => app.approvalStatus === 'approved') && (
-                      <Button
-                        fullWidth
-                        variant="contained"
-                        onClick={() => navigate('/player/matches')}
-                      >
-                        {t('player.matches.title')}
-                      </Button>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Box>
-
-            {/* 다가오는 경기 일정 */}
-            <Box>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <CalendarIcon color="primary" />
-                    {t('player.dashboard.upcomingMatches')}
-                  </Typography>
-                  
-                  {matchesLoading ? (
-                    <CircularProgress />
-                  ) : upcomingMatches.length === 0 ? (
-                    <Alert severity="info">
-                      {t('player.dashboard.noUpcomingMatches')}
-                    </Alert>
-                  ) : (
-                    <List>
-                      {upcomingMatches.slice(0, 3).map((match, index) => (
-                        <React.Fragment key={match.id}>
-                          {index > 0 && <Divider />}
-                          <ListItem>
-                            <ListItemIcon>
-                              <TrophyIcon color="primary" />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                  {match.tournament.name} - {match.roundName}
-                                </Typography>
-                              }
-                              secondary={
-                                <Box>
-                                  <Typography variant="body2" color="text.secondary">
-                                    🏁 {match.player1Name} vs {match.player2Name}
-                                  </Typography>
-                                  {match.courtNumber && (
-                                    <Typography variant="body2" color="text.secondary">
-                                      🏟️ {t('player.matches.court')} {match.courtNumber}
-                                    </Typography>
-                                  )}
-                                  {match.scheduledTime && (
-                                    <Typography variant="body2" color="text.secondary">
-                                      🕐 {new Date(match.scheduledTime).toLocaleString('ko-KR')}
-                                    </Typography>
-                                  )}
-                                  <Typography variant="body2" color="text.secondary">
-                                    📍 {match.tournament.location}
-                                  </Typography>
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                        </React.Fragment>
-                      ))}
-                    </List>
-                  )}
-
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{ mt: 2 }}
-                    onClick={() => navigate('/player/matches')}
-                  >
-                    {t('player.dashboard.viewAllMatches')}
-                  </Button>
-                </CardContent>
-              </Card>
-            </Box>
-
-            {/* 참가 가능한 대회 */}
-            <Box>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <SearchIcon color="primary" />
-                    {t('player.tournaments.title')}
-                  </Typography>
-                  
-                  {tournamentsLoading ? (
-                    <CircularProgress />
-                  ) : availableTournaments.length === 0 ? (
-                    <Alert severity="info">
-                      {t('player.tournaments.noTournaments')}
-                    </Alert>
-                  ) : (
-                    <List>
-                      {availableTournaments.slice(0, 3).map((tournament, index) => (
-                        <React.Fragment key={tournament.id}>
-                          {index > 0 && <Divider />}
-                          <ListItem>
-                            <ListItemIcon>
-                              <CalendarIcon color="primary" />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={
-                                <Typography variant="subtitle1" fontWeight="bold">
-                                  {tournament.name}
-                                </Typography>
-                              }
-                              secondary={
-                                <Box>
-                                  <Typography variant="body2" color="text.secondary">
-                                    📍 {tournament.location}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    📅 {formatDate(tournament.startDate)}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    👥 {tournament.currentParticipants}/{tournament.maxParticipants} {t('player.tournaments.participants')}
-                                  </Typography>
-                                  <Typography variant="body2" color="text.secondary">
-                                    💰 {formatCurrency(tournament.participantFee)}
-                                  </Typography>
-                                </Box>
-                              }
-                            />
-                          </ListItem>
-                        </React.Fragment>
-                      ))}
-                    </List>
-                  )}
-
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    sx={{ mt: 2 }}
-                    onClick={() => navigate('/player/tournaments')}
-                  >
-                    {t('player.tournaments.browse', { defaultValue: 'Browse Tournaments' })}
-                  </Button>
-                </CardContent>
-              </Card>
-            </Box>
-
-            {/* 퀵 액션 */}
-            <Box>
-              <Paper sx={{ p: 2 }}>
-                <Typography variant="h6" fontWeight="bold" gutterBottom>
-                  {t('common.quickActions', { defaultValue: 'Quick Actions' })}
+        {/* 다가오는 경기 일정 */}
+        <Card sx={{ 
+          background: darkTheme.card.elevated,
+          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          borderRadius: 3,
+          mb: 3
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+              <CalendarIcon sx={{ color: darkTheme.accent.secondary }} />
+              <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
+                다가오는 경기
+              </Typography>
+            </Stack>
+            
+            {matchesLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress sx={{ color: darkTheme.accent.secondary }} />
+              </Box>
+            ) : upcomingMatches.length === 0 ? (
+              <Box sx={{ 
+                p: 3,
+                textAlign: 'center',
+                bgcolor: alpha(darkTheme.accent.secondary, 0.1),
+                borderRadius: 2,
+                border: `1px solid ${alpha(darkTheme.accent.secondary, 0.2)}`
+              }}>
+                <Typography variant="body2" color={darkTheme.text.secondary}>
+                  예정된 경기가 없습니다
                 </Typography>
-                <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(4, 1fr)' }, 
-                  gap: 2 
-                }}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<SearchIcon />}
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {upcomingMatches.slice(0, 2).map((match, index) => (
+                  <Box 
+                    key={match.id}
+                    sx={{ 
+                      p: 2,
+                      bgcolor: alpha(darkTheme.background.primary, 0.3),
+                      borderRadius: 2,
+                      border: `1px solid ${alpha(darkTheme.accent.secondary, 0.2)}`,
+                      borderLeft: `3px solid ${darkTheme.accent.secondary}`
+                    }}
+                  >
+                    <Typography variant="subtitle2" fontWeight="600" color={darkTheme.text.primary} sx={{ mb: 1 }}>
+                      {match.tournament.name} - {match.roundName}
+                    </Typography>
+                    <Typography variant="body2" color={darkTheme.accent.secondary} sx={{ mb: 1, fontWeight: 600 }}>
+                      🏁 {match.player1Name} vs {match.player2Name}
+                    </Typography>
+                    <Stack spacing={0.5}>
+                      {match.courtNumber && (
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          🏟️ 코트 {match.courtNumber}
+                        </Typography>
+                      )}
+                      {match.scheduledTime && (
+                        <Typography variant="body2" color={darkTheme.accent.gold} sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                          🕐 {new Date(match.scheduledTime).toLocaleString('ko-KR')}
+                        </Typography>
+                      )}
+                      <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                        📍 {match.tournament.location}
+                      </Typography>
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            )}
+
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{ 
+                mt: 3,
+                bgcolor: darkTheme.accent.secondary,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.accent.secondary, 0.8)
+                }
+              }}
+              onClick={() => navigate('/player/matches')}
+            >
+              모든 경기 보기
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* 참가 가능한 대회 */}
+        <Card sx={{ 
+          background: darkTheme.card.elevated,
+          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          borderRadius: 3,
+          mb: 3
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+              <SearchIcon sx={{ color: darkTheme.accent.gold }} />
+              <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
+                참가 가능한 대회
+              </Typography>
+            </Stack>
+            
+            {tournamentsLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+                <CircularProgress sx={{ color: darkTheme.accent.gold }} />
+              </Box>
+            ) : availableTournaments.length === 0 ? (
+              <Box sx={{ 
+                p: 3,
+                textAlign: 'center',
+                bgcolor: alpha(darkTheme.accent.gold, 0.1),
+                borderRadius: 2,
+                border: `1px solid ${alpha(darkTheme.accent.gold, 0.2)}`
+              }}>
+                <Typography variant="body2" color={darkTheme.text.secondary}>
+                  현재 참가 가능한 대회가 없습니다
+                </Typography>
+              </Box>
+            ) : (
+              <Stack spacing={2}>
+                {availableTournaments.slice(0, 2).map((tournament, index) => (
+                  <Box 
+                    key={tournament.id}
+                    sx={{ 
+                      p: 2,
+                      bgcolor: alpha(darkTheme.background.primary, 0.3),
+                      borderRadius: 2,
+                      border: `1px solid ${alpha(darkTheme.accent.gold, 0.2)}`,
+                      borderLeft: `3px solid ${darkTheme.accent.gold}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      '&:hover': {
+                        bgcolor: alpha(darkTheme.background.primary, 0.5),
+                        transform: 'translateY(-1px)'
+                      }
+                    }}
                     onClick={() => navigate('/player/tournaments')}
                   >
-                    {t('common.search')} {t('navigation.tournaments')}
-                  </Button>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<TrophyIcon />}
-                    onClick={() => navigate('/player/applications')}
-                  >
-                    {t('navigation.applications')}
-                  </Button>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<TrendingUpIcon />}
-                    onClick={() => navigate('/player/rankings')}
-                  >
-                    {t('navigation.rankings')}
-                  </Button>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    startIcon={<PersonIcon />}
-                    onClick={() => navigate('/player/profile')}
-                  >
-                    {t('navigation.profile')}
-                  </Button>
-                </Box>
-              </Paper>
-            </Box>
-          </Box>
+                    <Typography variant="subtitle2" fontWeight="600" color={darkTheme.text.primary} sx={{ mb: 1 }}>
+                      {tournament.name}
+                    </Typography>
+                    <Stack spacing={0.5}>
+                      <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                        📍 {tournament.location}
+                      </Typography>
+                      <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                        📅 {formatDate(tournament.startDate)}
+                      </Typography>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          👥 {tournament.currentParticipants}/{tournament.maxParticipants} 명
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.accent.gold} sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                          💰 {formatCurrency(tournament.participantFee)}
+                        </Typography>
+                      </Stack>
+                    </Stack>
+                  </Box>
+                ))}
+              </Stack>
+            )}
+
+            <Button
+              fullWidth
+              variant="contained"
+              sx={{ 
+                mt: 3,
+                bgcolor: darkTheme.accent.gold,
+                color: darkTheme.background.primary,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.accent.gold, 0.8)
+                }
+              }}
+              onClick={() => navigate('/player/tournaments')}
+            >
+              대회 둘러보기
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* 퀵 액션 */}
+        <Box sx={{ 
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          bgcolor: alpha(darkTheme.background.secondary, 0.95),
+          backdropFilter: 'blur(10px)',
+          borderTop: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          p: 2,
+          zIndex: 10,
+          display: { xs: 'block', sm: 'none' }
+        }}>
+          <Stack direction="row" spacing={1}>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/tournaments')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <SearchIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                대회
+              </Typography>
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/applications')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <TrophyIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                신청
+              </Typography>
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/rankings')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <TrendingUpIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                랭킹
+              </Typography>
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/profile')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <PersonIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                프로필
+              </Typography>
+            </Button>
+          </Stack>
         </Box>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

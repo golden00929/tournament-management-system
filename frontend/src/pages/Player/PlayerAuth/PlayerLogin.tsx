@@ -13,14 +13,16 @@ import {
   IconButton,
   Paper,
   Divider,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import {
   Email as EmailIcon,
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  SportsHandball as SportsIcon,
   Login as LoginIcon,
 } from '@mui/icons-material';
 import LanguageSelector from '../../../components/LanguageSelector/LanguageSelector';
@@ -40,6 +42,7 @@ const PlayerLogin: React.FC = () => {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [redirecting, setRedirecting] = useState(false);
 
@@ -62,6 +65,15 @@ const PlayerLogin: React.FC = () => {
       }, 100);
     }
   }, [navigate, redirecting]);
+
+  useEffect(() => {
+    // 저장된 이메일 불러오기
+    const savedEmail = localStorage.getItem('playerRememberedEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberEmail(true);
+    }
+  }, []);
 
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
@@ -117,6 +129,15 @@ const PlayerLogin: React.FC = () => {
       console.log('✅ PlayerLogin: Login successful', result);
       
       if (result.success) {
+        // 이메일 기억하기 처리
+        if (rememberEmail) {
+          localStorage.setItem('playerRememberedEmail', formData.email);
+          console.log('💾 PlayerLogin: Email saved for next login');
+        } else {
+          localStorage.removeItem('playerRememberedEmail');
+          console.log('🗑️ PlayerLogin: Saved email removed');
+        }
+
         // 사용자 정보에 role 추가 (API에서 role이 없을 경우 대비)
         const playerData = (result.data as any).player || (result.data as any).user;
         const userData = {
@@ -128,11 +149,11 @@ const PlayerLogin: React.FC = () => {
 
         // Redux store와 localStorage에 인증 정보 저장
         dispatch(setCredentials({
-          token: result.data.token,
+          token: result.data.accessToken,
           user: userData,
         }));
 
-        localStorage.setItem('token', result.data.token);
+        localStorage.setItem('token', result.data.accessToken);
         localStorage.setItem('user', JSON.stringify(userData));
 
         // localStorage 변경 이벤트 강제 발생 (같은 탭에서는 자동으로 발생하지 않음)
@@ -186,30 +207,52 @@ const PlayerLogin: React.FC = () => {
     );
   }
 
+  // 다크 테마 색상 정의
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e',
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6',
+      gold: '#ffd700',
+    },
+  };
+
   return (
-    <Container maxWidth="sm">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 3,
-        }}
-      >
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 3,
+      }}
+    >
+      <Container maxWidth="sm">
         <Paper 
           elevation={8} 
           sx={{ 
             width: '100%',
             borderRadius: 3,
             overflow: 'hidden',
+            background: darkTheme.background.secondary,
+            border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
           }}
         >
           {/* 헤더 */}
           <Box
             sx={{
-              bgcolor: 'primary.main',
-              color: 'white',
+              background: `linear-gradient(135deg, ${darkTheme.accent.primary} 0%, ${darkTheme.accent.secondary} 100%)`,
+              color: darkTheme.text.primary,
               p: 4,
               textAlign: 'center',
               position: 'relative',
@@ -217,22 +260,55 @@ const PlayerLogin: React.FC = () => {
           >
             {/* 언어 선택기 */}
             <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-              <LanguageSelector />
+              <LanguageSelector darkMode={true} />
             </Box>
             
-            <SportsIcon sx={{ fontSize: 48, mb: 1 }} />
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center',
+              alignItems: 'center',
+              mb: 1,
+              '& svg': { 
+                fontSize: 48,
+                filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))'
+              }
+            }}>
+              🏸
+            </Box>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ 
+              color: darkTheme.text.primary,
+              textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+            }}>
               {t('auth.loginTitle')}
             </Typography>
-            <Typography variant="body1" sx={{ opacity: 0.9 }}>
+            <Typography variant="body1" sx={{ 
+              opacity: 0.95,
+              color: darkTheme.text.accent,
+              fontWeight: 500
+            }}>
               {t('auth.loginSubtitle', { defaultValue: 'Login to participate in tournaments' })}
             </Typography>
           </Box>
 
-          <CardContent sx={{ p: 4 }}>
+          <CardContent sx={{ 
+            p: 4, 
+            bgcolor: darkTheme.background.secondary,
+            color: darkTheme.text.primary 
+          }}>
             {/* 에러 메시지 */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 3,
+                  bgcolor: alpha('#f44336', 0.1),
+                  color: '#ff6b6b',
+                  border: '1px solid rgba(244, 67, 54, 0.3)',
+                  '& .MuiAlert-icon': {
+                    color: '#ff6b6b'
+                  }
+                }}
+              >
                 {getErrorMessage()}
               </Alert>
             )}
@@ -250,11 +326,35 @@ const PlayerLogin: React.FC = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <EmailIcon color="action" />
+                        <EmailIcon sx={{ color: darkTheme.accent.primary }} />
                       </InputAdornment>
                     ),
                   }}
                   placeholder="example@email.com"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                      color: darkTheme.text.primary,
+                      '& fieldset': {
+                        borderColor: alpha(darkTheme.text.secondary, 0.3),
+                      },
+                      '&:hover fieldset': {
+                        borderColor: darkTheme.accent.primary,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: darkTheme.accent.primary,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: darkTheme.text.secondary,
+                      '&.Mui-focused': {
+                        color: darkTheme.accent.primary,
+                      },
+                    },
+                    '& .MuiFormHelperText-root': {
+                      color: '#ff6b6b',
+                    },
+                  }}
                 />
               </Box>
 
@@ -270,7 +370,7 @@ const PlayerLogin: React.FC = () => {
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <LockIcon color="action" />
+                        <LockIcon sx={{ color: darkTheme.accent.primary }} />
                       </InputAdornment>
                     ),
                     endAdornment: (
@@ -279,6 +379,7 @@ const PlayerLogin: React.FC = () => {
                           onClick={() => setShowPassword(!showPassword)}
                           edge="end"
                           aria-label={t('auth.togglePassword', { defaultValue: 'Toggle password visibility' })}
+                          sx={{ color: darkTheme.text.secondary }}
                         >
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
@@ -286,6 +387,57 @@ const PlayerLogin: React.FC = () => {
                     ),
                   }}
                   placeholder={t('auth.passwordPlaceholder', { defaultValue: 'Enter your password' })}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                      color: darkTheme.text.primary,
+                      '& fieldset': {
+                        borderColor: alpha(darkTheme.text.secondary, 0.3),
+                      },
+                      '&:hover fieldset': {
+                        borderColor: darkTheme.accent.primary,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: darkTheme.accent.primary,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: darkTheme.text.secondary,
+                      '&.Mui-focused': {
+                        color: darkTheme.accent.primary,
+                      },
+                    },
+                    '& .MuiFormHelperText-root': {
+                      color: '#ff6b6b',
+                    },
+                  }}
+                />
+              </Box>
+
+              {/* 이메일 기억하기 체크박스 */}
+              <Box sx={{ mb: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={rememberEmail}
+                      onChange={(e) => setRememberEmail(e.target.checked)}
+                      name="rememberEmail"
+                      sx={{
+                        color: darkTheme.text.secondary,
+                        '&.Mui-checked': {
+                          color: darkTheme.accent.primary,
+                        },
+                      }}
+                    />
+                  }
+                  label={t('auth.rememberEmail', { defaultValue: 'Remember email address' })}
+                  sx={{ 
+                    color: darkTheme.text.secondary,
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '0.875rem',
+                      color: darkTheme.text.secondary,
+                    }
+                  }}
                 />
               </Box>
 
@@ -301,17 +453,29 @@ const PlayerLogin: React.FC = () => {
                   fontSize: '1.1rem',
                   fontWeight: 'bold',
                   mb: 3,
+                  bgcolor: darkTheme.accent.primary,
+                  color: darkTheme.text.primary,
+                  '&:hover': {
+                    bgcolor: alpha(darkTheme.accent.primary, 0.8),
+                  },
+                  '&:disabled': {
+                    bgcolor: alpha(darkTheme.text.secondary, 0.3),
+                    color: alpha(darkTheme.text.secondary, 0.7),
+                  },
                 }}
               >
                 {isLoading ? t('auth.loggingIn', { defaultValue: 'Logging in...' }) : t('auth.login')}
               </Button>
             </form>
 
-            <Divider sx={{ my: 3 }} />
+            <Divider sx={{ 
+              my: 3,
+              borderColor: alpha(darkTheme.text.secondary, 0.2),
+            }} />
 
             {/* 회원가입 링크 */}
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <Typography variant="body2" sx={{ color: darkTheme.text.secondary }} gutterBottom>
                 {t('auth.noAccount', { defaultValue: "Don't have an account yet?" })}
               </Typography>
               <Link
@@ -319,10 +483,12 @@ const PlayerLogin: React.FC = () => {
                 to="/player/register"
                 variant="body1"
                 sx={{
+                  color: darkTheme.accent.secondary,
                   fontWeight: 'bold',
                   textDecoration: 'none',
                   '&:hover': {
                     textDecoration: 'underline',
+                    color: alpha(darkTheme.accent.secondary, 0.8),
                   },
                 }}
               >
@@ -332,18 +498,19 @@ const PlayerLogin: React.FC = () => {
 
             {/* 관리자 로그인 링크 */}
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
+              <Typography variant="body2" sx={{ color: darkTheme.text.secondary }} gutterBottom>
                 {t('auth.isAdmin', { defaultValue: 'Are you an administrator?' })}
               </Typography>
               <Link
                 component={RouterLink}
                 to="/login"
                 variant="body2"
-                color="text.secondary"
                 sx={{
+                  color: darkTheme.text.secondary,
                   textDecoration: 'none',
                   '&:hover': {
                     textDecoration: 'underline',
+                    color: darkTheme.text.accent,
                   },
                 }}
               >
@@ -352,8 +519,8 @@ const PlayerLogin: React.FC = () => {
             </Box>
           </CardContent>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 

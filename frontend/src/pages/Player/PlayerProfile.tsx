@@ -11,11 +11,13 @@ import {
   TextField,
   Alert,
   Divider,
-  Paper,
   Avatar,
   CircularProgress,
   Chip,
+  IconButton,
+  Stack,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   ArrowBack as BackIcon,
   Save as SaveIcon,
@@ -133,209 +135,486 @@ const PlayerProfile: React.FC = () => {
 
   const profile = profileData?.data;
 
+  // 다크 테마 색상 정의
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e',
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6',
+      gold: '#ffd700',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+    },
+    card: {
+      elevated: '#252525',
+    },
+  };
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      {/* 헤더 */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<BackIcon />}
-          onClick={() => navigate('/player/dashboard')}
-        >
-          {t('player.profile.backToDashboard', { defaultValue: 'Back to Dashboard' })}
-        </Button>
-        <Typography variant="h4" fontWeight="bold" sx={{ flex: 1 }}>
-          {t('player.profile.title')}
-        </Typography>
-        <LanguageSelector />
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+        color: darkTheme.text.primary,
+        pb: { xs: 10, sm: 4 },
+      }}
+    >
+      {/* 모바일 헤더 */}
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          background: alpha(darkTheme.background.secondary, 0.95),
+          backdropFilter: 'blur(10px)',
+          borderBottom: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          px: 2,
+          py: 1.5,
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton
+              onClick={() => navigate('/player/dashboard')}
+              sx={{
+                color: darkTheme.text.secondary,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.text.secondary, 0.1),
+                  color: darkTheme.text.primary,
+                },
+              }}
+            >
+              <BackIcon />
+            </IconButton>
+            <PersonIcon sx={{ color: darkTheme.accent.primary, fontSize: '1.5rem' }} />
+            <Typography variant="h6" fontWeight="600" color={darkTheme.text.primary}>
+              {t('player.profile.title')}
+            </Typography>
+          </Stack>
+          <LanguageSelector darkMode={true} />
+        </Stack>
       </Box>
 
-      {updateStatus.type && (
-        <Alert 
-          severity={updateStatus.type} 
-          sx={{ mb: 3 }}
-          onClose={() => setUpdateStatus({ type: null, message: '' })}
-        >
-          {updateStatus.message}
-        </Alert>
-      )}
+      <Container maxWidth="sm" sx={{ px: { xs: 2, sm: 3 }, pt: 2 }}>
 
-      <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
-        {/* 왼쪽: 기본 정보 (수정 불가) */}
-        <Box sx={{ flex: { md: '0 0 33.333%' } }}>
-          <Paper sx={{ p: 3, textAlign: 'center', height: 'fit-content' }}>
+        {updateStatus.type && (
+          <Alert 
+            severity={updateStatus.type} 
+            sx={{ 
+              mb: 3,
+              bgcolor: alpha(
+                updateStatus.type === 'success' ? darkTheme.accent.success : darkTheme.accent.error, 
+                0.1
+              ),
+              color: updateStatus.type === 'success' ? darkTheme.accent.success : darkTheme.accent.error,
+              border: `1px solid ${alpha(
+                updateStatus.type === 'success' ? darkTheme.accent.success : darkTheme.accent.error, 
+                0.3
+              )}`,
+              '& .MuiAlert-icon': {
+                color: updateStatus.type === 'success' ? darkTheme.accent.success : darkTheme.accent.error,
+              },
+            }}
+            onClose={() => setUpdateStatus({ type: null, message: '' })}
+          >
+            {updateStatus.message}
+          </Alert>
+        )}
+
+        {/* 프로필 기본 정보 카드 */}
+        <Card sx={{
+          background: `linear-gradient(135deg, ${darkTheme.card.elevated} 0%, ${darkTheme.background.tertiary} 100%)`,
+          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          borderRadius: 3,
+          mb: 3,
+          overflow: 'hidden',
+          position: 'relative',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${darkTheme.accent.primary}, ${darkTheme.accent.secondary})`
+          }
+        }}>
+          <CardContent sx={{ p: 3, textAlign: 'center' }}>
             <Avatar
               sx={{
                 width: 80,
                 height: 80,
                 mx: 'auto',
                 mb: 2,
-                bgcolor: 'primary.main',
+                bgcolor: darkTheme.accent.primary,
                 fontSize: '2rem',
+                boxShadow: `0 0 20px ${alpha(darkTheme.accent.primary, 0.3)}`
               }}
             >
               {profile?.name?.charAt(0)}
             </Avatar>
             
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
+            <Typography variant="h5" fontWeight="bold" gutterBottom color={darkTheme.text.primary}>
               {profile?.name}
             </Typography>
             
-            <Typography variant="body2" color="text.secondary" gutterBottom>
+            <Typography variant="body2" color={darkTheme.text.secondary} gutterBottom>
               {profile?.email}
             </Typography>
 
             <Chip
               label={getSkillLevelDisplay(profile?.skillLevel || '').label}
-              color={getSkillLevelDisplay(profile?.skillLevel || '').color}
-              sx={{ mb: 2 }}
+              sx={{ 
+                mb: 3,
+                bgcolor: alpha(
+                  profile?.skillLevel === 'a_class' ? darkTheme.accent.error :
+                  profile?.skillLevel === 'b_class' ? darkTheme.accent.warning :
+                  profile?.skillLevel === 'c_class' ? darkTheme.accent.primary :
+                  darkTheme.accent.success, 0.2
+                ),
+                color: profile?.skillLevel === 'a_class' ? darkTheme.accent.error :
+                       profile?.skillLevel === 'b_class' ? darkTheme.accent.warning :
+                       profile?.skillLevel === 'c_class' ? darkTheme.accent.primary :
+                       darkTheme.accent.success,
+                border: `1px solid ${alpha(
+                  profile?.skillLevel === 'a_class' ? darkTheme.accent.error :
+                  profile?.skillLevel === 'b_class' ? darkTheme.accent.warning :
+                  profile?.skillLevel === 'c_class' ? darkTheme.accent.primary :
+                  darkTheme.accent.success, 0.3
+                )}`,
+              }}
             />
 
-            <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2, borderColor: alpha(darkTheme.text.secondary, 0.2) }} />
 
-            <Box sx={{ textAlign: 'left' }}>
-              <Typography variant="subtitle2" color="text.secondary">
-                {t('player.profile.eloRating')}
-              </Typography>
-              <Typography variant="h5" fontWeight="bold" color="primary" gutterBottom>
-                {profile?.eloRating}
-              </Typography>
+            <Stack spacing={2} sx={{ textAlign: 'left' }}>
+              <Box>
+                <Typography variant="caption" color={darkTheme.text.secondary}>
+                  {t('player.profile.eloRating')}
+                </Typography>
+                <Typography variant="h4" fontWeight="bold" color={darkTheme.accent.gold}>
+                  {profile?.eloRating}
+                </Typography>
+              </Box>
 
-              <Typography variant="subtitle2" color="text.secondary">
-                {t('player.profile.birthYear')}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                {profile?.birthYear} {t('common.year', { defaultValue: 'year' })}
-              </Typography>
+              <Box>
+                <Typography variant="caption" color={darkTheme.text.secondary}>
+                  {t('player.profile.birthYear')}
+                </Typography>
+                <Typography variant="body1" color={darkTheme.text.primary}>
+                  {profile?.birthYear} {t('common.year', { defaultValue: 'year' })}
+                </Typography>
+              </Box>
 
-              <Typography variant="subtitle2" color="text.secondary">
-                {t('player.profile.gender')}
-              </Typography>
-              <Typography variant="body1" gutterBottom>
-                {profile?.gender === 'male' ? t('player.profile.male') : t('player.profile.female')}
-              </Typography>
+              <Box>
+                <Typography variant="caption" color={darkTheme.text.secondary}>
+                  {t('player.profile.gender')}
+                </Typography>
+                <Typography variant="body1" color={darkTheme.text.primary}>
+                  {profile?.gender === 'male' ? t('player.profile.male') : t('player.profile.female')}
+                </Typography>
+              </Box>
 
-              <Typography variant="subtitle2" color="text.secondary">
-                {t('common.registrationDate', { defaultValue: 'Registration Date' })}
-              </Typography>
-              <Typography variant="body1">
-                {new Date(profile?.registrationDate || '').toLocaleDateString('vi-VN')}
-              </Typography>
-            </Box>
-          </Paper>
-        </Box>
+              <Box>
+                <Typography variant="caption" color={darkTheme.text.secondary}>
+                  {t('common.registrationDate', { defaultValue: 'Registration Date' })}
+                </Typography>
+                <Typography variant="body1" color={darkTheme.text.primary}>
+                  {new Date(profile?.registrationDate || '').toLocaleDateString('vi-VN')}
+                </Typography>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
 
-        {/* 오른쪽: 수정 가능한 정보 */}
-        <Box sx={{ flex: 1 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <PersonIcon color="primary" />
+        {/* 수정 가능한 정보 폼 */}
+        <Card sx={{
+          background: darkTheme.card.elevated,
+          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          borderRadius: 3,
+        }}>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+              <PersonIcon sx={{ color: darkTheme.accent.primary }} />
+              <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
                 {t('player.profile.editPersonalInfo', { defaultValue: 'Edit Personal Information' })}
               </Typography>
-              <Typography variant="body2" color="text.secondary" gutterBottom sx={{ mb: 3 }}>
-                {t('player.profile.editableInfoOnly', { defaultValue: 'Only editable information can be updated.' })}
-              </Typography>
+            </Stack>
+            <Typography variant="body2" color={darkTheme.text.secondary} sx={{ mb: 3 }}>
+              {t('player.profile.editableInfoOnly', { defaultValue: 'Only editable information can be updated.' })}
+            </Typography>
 
-              <form onSubmit={handleSubmit}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <TextField
-                      fullWidth
-                      label={t('player.profile.name')}
-                      value={formData.name}
-                      onChange={handleInputChange('name')}
-                      variant="outlined"
-                    />
-
-                    <TextField
-                      fullWidth
-                      label={t('player.profile.phone')}
-                      value={formData.phone}
-                      onChange={handleInputChange('phone')}
-                      variant="outlined"
-                      placeholder="010-1234-5678"
-                    />
-                  </Box>
-
-                  <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <TextField
-                      fullWidth
-                      label={t('player.profile.province')}
-                      value={formData.province}
-                      onChange={handleInputChange('province')}
-                      variant="outlined"
-                      placeholder={t('common.exampleCity', { defaultValue: 'e.g. Ho Chi Minh City' })}
-                    />
-
-                    <TextField
-                      fullWidth
-                      label={t('player.profile.district')}
-                      value={formData.district}
-                      onChange={handleInputChange('district')}
-                      variant="outlined"
-                      placeholder={t('common.exampleDistrict', { defaultValue: 'e.g. District 1' })}
-                    />
-                  </Box>
+            <form onSubmit={handleSubmit}>
+              <Stack spacing={3}>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label={t('player.profile.name')}
+                    value={formData.name}
+                    onChange={handleInputChange('name')}
+                    variant="outlined"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                        color: darkTheme.text.primary,
+                        '& fieldset': {
+                          borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        },
+                        '&:hover fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: darkTheme.text.secondary,
+                        '&.Mui-focused': {
+                          color: darkTheme.accent.primary,
+                        },
+                      },
+                    }}
+                  />
 
                   <TextField
                     fullWidth
-                    label={t('player.profile.address')}
-                    value={formData.address}
-                    onChange={handleInputChange('address')}
+                    label={t('player.profile.phone')}
+                    value={formData.phone}
+                    onChange={handleInputChange('phone')}
                     variant="outlined"
-                    placeholder={t('common.addressPlaceholder', { defaultValue: 'Enter detailed address (optional)' })}
-                    multiline
-                    rows={2}
+                    placeholder="010-1234-5678"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                        color: darkTheme.text.primary,
+                        '& fieldset': {
+                          borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        },
+                        '&:hover fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: darkTheme.text.secondary,
+                        '&.Mui-focused': {
+                          color: darkTheme.accent.primary,
+                        },
+                      },
+                    }}
+                  />
+                </Stack>
+
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label={t('player.profile.province')}
+                    value={formData.province}
+                    onChange={handleInputChange('province')}
+                    variant="outlined"
+                    placeholder={t('common.exampleCity', { defaultValue: 'e.g. Ho Chi Minh City' })}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                        color: darkTheme.text.primary,
+                        '& fieldset': {
+                          borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        },
+                        '&:hover fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: darkTheme.text.secondary,
+                        '&.Mui-focused': {
+                          color: darkTheme.accent.primary,
+                        },
+                      },
+                    }}
                   />
 
-                  <Divider sx={{ my: 1 }} />
-                  <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                    {t('player.profile.emergencyContact')}
-                  </Typography>
+                  <TextField
+                    fullWidth
+                    label={t('player.profile.district')}
+                    value={formData.district}
+                    onChange={handleInputChange('district')}
+                    variant="outlined"
+                    placeholder={t('common.exampleDistrict', { defaultValue: 'e.g. District 1' })}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                        color: darkTheme.text.primary,
+                        '& fieldset': {
+                          borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        },
+                        '&:hover fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: darkTheme.text.secondary,
+                        '&.Mui-focused': {
+                          color: darkTheme.accent.primary,
+                        },
+                      },
+                    }}
+                  />
+                </Stack>
 
-                  <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-                    <TextField
-                      fullWidth
-                      label={t('player.profile.emergencyContact')}
-                      value={formData.emergencyContact}
-                      onChange={handleInputChange('emergencyContact')}
-                      variant="outlined"
-                      placeholder={t('common.emergencyContactExample', { defaultValue: 'e.g. John Smith (Father)' })}
-                    />
+                <TextField
+                  fullWidth
+                  label={t('player.profile.address')}
+                  value={formData.address}
+                  onChange={handleInputChange('address')}
+                  variant="outlined"
+                  placeholder={t('common.addressPlaceholder', { defaultValue: 'Enter detailed address (optional)' })}
+                  multiline
+                  rows={2}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                      color: darkTheme.text.primary,
+                      '& fieldset': {
+                        borderColor: alpha(darkTheme.text.secondary, 0.3),
+                      },
+                      '&:hover fieldset': {
+                        borderColor: darkTheme.accent.primary,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: darkTheme.accent.primary,
+                      },
+                    },
+                    '& .MuiInputLabel-root': {
+                      color: darkTheme.text.secondary,
+                      '&.Mui-focused': {
+                        color: darkTheme.accent.primary,
+                      },
+                    },
+                  }}
+                />
 
-                    <TextField
-                      fullWidth
-                      label={t('player.profile.emergencyPhone')}
-                      value={formData.emergencyPhone}
-                      onChange={handleInputChange('emergencyPhone')}
-                      variant="outlined"
-                      placeholder="010-9876-5432"
-                    />
-                  </Box>
+                <Divider sx={{ borderColor: alpha(darkTheme.text.secondary, 0.2) }} />
+                
+                <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
+                  {t('player.profile.emergencyContact')}
+                </Typography>
 
-                  <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                    <Button
-                      variant="outlined"
-                      onClick={() => navigate('/player/dashboard')}
-                    >
-                      {t('common.cancel')}
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={<SaveIcon />}
-                    >
-                      {t('common.saveProfile', { defaultValue: 'Save Profile' })}
-                    </Button>
-                  </Box>
-                </Box>
-              </form>
+                <Stack spacing={2}>
+                  <TextField
+                    fullWidth
+                    label={t('player.profile.emergencyContact')}
+                    value={formData.emergencyContact}
+                    onChange={handleInputChange('emergencyContact')}
+                    variant="outlined"
+                    placeholder={t('common.emergencyContactExample', { defaultValue: 'e.g. John Smith (Father)' })}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                        color: darkTheme.text.primary,
+                        '& fieldset': {
+                          borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        },
+                        '&:hover fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: darkTheme.text.secondary,
+                        '&.Mui-focused': {
+                          color: darkTheme.accent.primary,
+                        },
+                      },
+                    }}
+                  />
+
+                  <TextField
+                    fullWidth
+                    label={t('player.profile.emergencyPhone')}
+                    value={formData.emergencyPhone}
+                    onChange={handleInputChange('emergencyPhone')}
+                    variant="outlined"
+                    placeholder="010-9876-5432"
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+                        color: darkTheme.text.primary,
+                        '& fieldset': {
+                          borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        },
+                        '&:hover fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: darkTheme.accent.primary,
+                        },
+                      },
+                      '& .MuiInputLabel-root': {
+                        color: darkTheme.text.secondary,
+                        '&.Mui-focused': {
+                          color: darkTheme.accent.primary,
+                        },
+                      },
+                    }}
+                  />
+                </Stack>
+
+                <Stack direction="row" spacing={2} sx={{ justifyContent: 'flex-end', mt: 3 }}>
+                  <Button
+                    variant="outlined"
+                    onClick={() => navigate('/player/dashboard')}
+                    sx={{
+                      borderColor: alpha(darkTheme.text.secondary, 0.3),
+                      color: darkTheme.text.secondary,
+                      '&:hover': {
+                        borderColor: darkTheme.accent.primary,
+                        color: darkTheme.accent.primary,
+                        bgcolor: alpha(darkTheme.accent.primary, 0.1),
+                      },
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    startIcon={<SaveIcon />}
+                    sx={{
+                      bgcolor: darkTheme.accent.primary,
+                      '&:hover': {
+                        bgcolor: alpha(darkTheme.accent.primary, 0.8),
+                      },
+                    }}
+                  >
+                    {t('common.saveProfile', { defaultValue: 'Save Profile' })}
+                  </Button>
+                </Stack>
+              </Stack>
+            </form>
             </CardContent>
           </Card>
-        </Box>
+        </Container>
       </Box>
-    </Container>
   );
 };
 
