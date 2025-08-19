@@ -23,6 +23,9 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  IconButton,
+  Stack,
+  alpha,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -187,148 +190,296 @@ const PlayerApplications: React.FC = () => {
   const applications = applicationsData?.data?.applications || [];
   const filteredApplications = filterApplications(applications);
 
+  // 다크 테마 색상 정의
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e',
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6',
+      gold: '#ffd700',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+    },
+    card: {
+      elevated: '#252525',
+    },
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* 헤더 */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<BackIcon />}
-          onClick={() => navigate('/player/dashboard')}
-        >
-          {t('player.matches.backToDashboard')}
-        </Button>
-        <Typography variant="h4" fontWeight="bold" sx={{ flex: 1 }}>
-          {t('player.applications.title')}
-        </Typography>
-        <LanguageSelector />
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+        color: darkTheme.text.primary,
+        pb: { xs: 10, sm: 4 },
+      }}
+    >
+      {/* 모바일 헤더 */}
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          background: alpha(darkTheme.background.secondary, 0.95),
+          backdropFilter: 'blur(10px)',
+          borderBottom: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          px: 2,
+          py: 1.5,
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton
+              onClick={() => navigate('/player/dashboard')}
+              sx={{
+                color: darkTheme.text.secondary,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.text.secondary, 0.1),
+                  color: darkTheme.text.primary,
+                },
+              }}
+            >
+              <BackIcon />
+            </IconButton>
+            <Typography variant="h6" fontWeight="600" color={darkTheme.text.primary}>
+              {t('player.applications.title')}
+            </Typography>
+          </Stack>
+          <LanguageSelector darkMode={true} />
+        </Stack>
       </Box>
 
-      {/* 탭 메뉴 */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label={`${t('common.all')} (${applications.length})`} />
-          <Tab label={`${t('player.applications.pending')} (${applications.filter(app => app.approvalStatus === 'pending').length})`} />
-          <Tab label={`${t('player.applications.approved')} (${applications.filter(app => app.approvalStatus === 'approved').length})`} />
-          <Tab label={`${t('player.applications.rejected')} (${applications.filter(app => app.approvalStatus === 'rejected').length})`} />
-        </Tabs>
-      </Paper>
+      <Container maxWidth="sm" sx={{ px: { xs: 2, sm: 3 }, pt: 2 }}>
 
-      {/* 신청 내역 */}
-      {filteredApplications.length === 0 ? (
-        <Alert severity="info">
-          {tabValue === 0 ? t('player.applications.noApplications') : t('player.applications.noApplicationsForStatus', { defaultValue: 'No applications with this status.' })}
-        </Alert>
-      ) : (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-          {filteredApplications.map((application) => (
-            <Box key={application.id}>
-              <Card>
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Typography variant="h6" fontWeight="bold">
+        {/* 탭 메뉴 */}
+        <Paper
+          sx={{
+            mb: 3,
+            bgcolor: darkTheme.card.elevated,
+            border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+            borderRadius: 2,
+          }}
+        >
+          <Tabs
+            value={tabValue}
+            onChange={handleTabChange}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              '& .MuiTab-root': {
+                color: darkTheme.text.secondary,
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                minWidth: { xs: 'auto', sm: 160 },
+                '&.Mui-selected': {
+                  color: darkTheme.accent.primary,
+                },
+              },
+              '& .MuiTabs-indicator': {
+                backgroundColor: darkTheme.accent.primary,
+              },
+            }}
+          >
+            <Tab label={`${t('common.all')} (${applications.length})`} />
+            <Tab label={`${t('player.applications.pending')} (${applications.filter(app => app.approvalStatus === 'pending').length})`} />
+            <Tab label={`${t('player.applications.approved')} (${applications.filter(app => app.approvalStatus === 'approved').length})`} />
+            <Tab label={`${t('player.applications.rejected')} (${applications.filter(app => app.approvalStatus === 'rejected').length})`} />
+          </Tabs>
+        </Paper>
+
+        {/* 신청 내역 */}
+        {filteredApplications.length === 0 ? (
+          <Alert
+            severity="info"
+            sx={{
+              bgcolor: alpha(darkTheme.accent.secondary, 0.1),
+              color: darkTheme.accent.secondary,
+              border: `1px solid ${alpha(darkTheme.accent.secondary, 0.3)}`,
+            }}
+          >
+            {tabValue === 0 ? t('player.applications.noApplications') : t('player.applications.noApplicationsForStatus', { defaultValue: 'No applications with this status.' })}
+          </Alert>
+        ) : (
+          <Stack spacing={2}>
+            {filteredApplications.map((application) => (
+              <Card
+                key={application.id}
+                sx={{
+                  background: darkTheme.card.elevated,
+                  border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                }}
+              >
+                <CardContent sx={{ p: 3 }}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary} sx={{ flex: 1, mr: 1 }}>
                       {application.tournament.name}
                     </Typography>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Stack spacing={1}>
                       <Chip
                         size="small"
                         label={getStatusText(application.approvalStatus)}
-                        color={getStatusColor(application.approvalStatus)}
-                        icon={getStatusIcon(application.approvalStatus)}
+                        sx={{
+                          bgcolor: alpha(
+                            application.approvalStatus === 'approved' ? darkTheme.accent.success :
+                            application.approvalStatus === 'pending' ? darkTheme.accent.warning :
+                            darkTheme.accent.error, 0.2
+                          ),
+                          color: application.approvalStatus === 'approved' ? darkTheme.accent.success :
+                                 application.approvalStatus === 'pending' ? darkTheme.accent.warning :
+                                 darkTheme.accent.error,
+                          border: `1px solid ${alpha(
+                            application.approvalStatus === 'approved' ? darkTheme.accent.success :
+                            application.approvalStatus === 'pending' ? darkTheme.accent.warning :
+                            darkTheme.accent.error, 0.3
+                          )}`,
+                          fontSize: '0.7rem'
+                        }}
                       />
                       <Chip
                         size="small"
                         label={getPaymentStatusText(application.paymentStatus)}
-                        color={getPaymentStatusColor(application.paymentStatus)}
-                        icon={<PaymentIcon />}
+                        sx={{
+                          bgcolor: alpha(
+                            application.paymentStatus === 'completed' ? darkTheme.accent.success :
+                            application.paymentStatus === 'pending' ? darkTheme.accent.warning :
+                            application.paymentStatus === 'failed' ? darkTheme.accent.error :
+                            darkTheme.accent.secondary, 0.2
+                          ),
+                          color: application.paymentStatus === 'completed' ? darkTheme.accent.success :
+                                 application.paymentStatus === 'pending' ? darkTheme.accent.warning :
+                                 application.paymentStatus === 'failed' ? darkTheme.accent.error :
+                                 darkTheme.accent.secondary,
+                          border: `1px solid ${alpha(
+                            application.paymentStatus === 'completed' ? darkTheme.accent.success :
+                            application.paymentStatus === 'pending' ? darkTheme.accent.warning :
+                            application.paymentStatus === 'failed' ? darkTheme.accent.error :
+                            darkTheme.accent.secondary, 0.3
+                          )}`,
+                          fontSize: '0.7rem'
+                        }}
                       />
-                    </Box>
-                  </Box>
+                    </Stack>
+                  </Stack>
 
-                  <List dense>
-                    <ListItem disablePadding>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        <TrophyIcon fontSize="small" color="primary" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={t('player.applications.eventType')}
-                        secondary={getEventTypeText(application.eventType)}
-                      />
-                    </ListItem>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ fontSize: '1rem' }}>🏆</Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          {t('player.applications.eventType')}
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
+                          {getEventTypeText(application.eventType)}
+                        </Typography>
+                      </Box>
+                    </Stack>
 
-                    <ListItem disablePadding>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        📍
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={t('player.matches.location')}
-                        secondary={application.tournament.location}
-                      />
-                    </ListItem>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ fontSize: '1rem' }}>📍</Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          {t('player.matches.location')}
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
+                          {application.tournament.location}
+                        </Typography>
+                      </Box>
+                    </Stack>
 
-                    <ListItem disablePadding>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        📅
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={t('player.tournaments.startDate')}
-                        secondary={formatDate(application.tournament.startDate)}
-                      />
-                    </ListItem>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ fontSize: '1rem' }}>📅</Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          {t('player.tournaments.startDate')}
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
+                          {formatDate(application.tournament.startDate)}
+                        </Typography>
+                      </Box>
+                    </Stack>
 
-                    <ListItem disablePadding>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        💰
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={t('player.tournaments.fee')}
-                        secondary={formatCurrency(application.tournament.participantFee)}
-                      />
-                    </ListItem>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ fontSize: '1rem' }}>💰</Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          {t('player.tournaments.fee')}
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.accent.gold} sx={{ fontWeight: 600 }}>
+                          {formatCurrency(application.tournament.participantFee)}
+                        </Typography>
+                      </Box>
+                    </Stack>
 
-                    <ListItem disablePadding>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        📋
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={t('player.applications.registrationDate')}
-                        secondary={formatDate(application.registrationDate)}
-                      />
-                    </ListItem>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ fontSize: '1rem' }}>📋</Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          {t('player.applications.registrationDate')}
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
+                          {formatDate(application.registrationDate)}
+                        </Typography>
+                      </Box>
+                    </Stack>
 
-                    <ListItem disablePadding>
-                      <ListItemIcon sx={{ minWidth: 32 }}>
-                        🎯
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={t('player.applications.registrationElo', { defaultValue: 'Registration ELO' })}
-                        secondary={application.registrationElo}
-                      />
-                    </ListItem>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Box sx={{ fontSize: '1rem' }}>🎯</Box>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                          {t('player.applications.registrationElo', { defaultValue: 'Registration ELO' })}
+                        </Typography>
+                        <Typography variant="body2" color={darkTheme.accent.gold} sx={{ fontWeight: 600 }}>
+                          {application.registrationElo}
+                        </Typography>
+                      </Box>
+                    </Stack>
 
                     {application.partnerPlayer && (
-                      <ListItem disablePadding>
-                        <ListItemIcon sx={{ minWidth: 32 }}>
-                          👥
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={t('player.applications.partner', { defaultValue: 'Partner' })}
-                          secondary={`${application.partnerPlayer.name} (ELO: ${application.partnerPlayer.eloRating})`}
-                        />
-                      </ListItem>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Box sx={{ fontSize: '1rem' }}>👥</Box>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                            {t('player.applications.partner', { defaultValue: 'Partner' })}
+                          </Typography>
+                          <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
+                            {`${application.partnerPlayer.name} (ELO: ${application.partnerPlayer.eloRating})`}
+                          </Typography>
+                        </Box>
+                      </Stack>
                     )}
-                  </List>
+                  </Stack>
 
-                  <Divider sx={{ my: 2 }} />
+                  <Divider sx={{ 
+                    my: 2,
+                    borderColor: alpha(darkTheme.text.secondary, 0.2),
+                  }} />
 
-                  <Box sx={{ display: 'flex', gap: 1 }}>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                     {application.approvalStatus === 'pending' && (
                       <Button
                         variant="outlined"
-                        color="error"
                         startIcon={<CancelIcon />}
                         onClick={() => handleCancelClick(application)}
                         size="small"
+                        sx={{
+                          borderColor: alpha(darkTheme.accent.error, 0.5),
+                          color: darkTheme.accent.error,
+                          '&:hover': {
+                            borderColor: darkTheme.accent.error,
+                            bgcolor: alpha(darkTheme.accent.error, 0.1),
+                          },
+                        }}
                       >
                         {t('player.applications.cancel')}
                       </Button>
@@ -337,9 +488,14 @@ const PlayerApplications: React.FC = () => {
                     {application.approvalStatus === 'approved' && application.paymentStatus === 'pending' && (
                       <Button
                         variant="contained"
-                        color="success"
                         startIcon={<PaymentIcon />}
                         size="small"
+                        sx={{
+                          bgcolor: darkTheme.accent.success,
+                          '&:hover': {
+                            bgcolor: alpha(darkTheme.accent.success, 0.8),
+                          },
+                        }}
                       >
                         {t('player.applications.makePayment', { defaultValue: 'Make Payment' })}
                       </Button>
@@ -349,6 +505,15 @@ const PlayerApplications: React.FC = () => {
                       variant="outlined"
                       size="small"
                       onClick={() => navigate(`/player/tournament/${application.tournament.id}`)}
+                      sx={{
+                        borderColor: alpha(darkTheme.text.secondary, 0.3),
+                        color: darkTheme.text.secondary,
+                        '&:hover': {
+                          borderColor: darkTheme.accent.primary,
+                          color: darkTheme.accent.primary,
+                          bgcolor: alpha(darkTheme.accent.primary, 0.1),
+                        },
+                      }}
                     >
                       {t('player.applications.viewTournament', { defaultValue: 'View Tournament' })}
                     </Button>
@@ -357,50 +522,89 @@ const PlayerApplications: React.FC = () => {
                       <Button
                         variant="contained"
                         size="small"
-                        color="primary"
                         onClick={() => navigate(`/player/tournament/${application.tournament.id}/bracket`)}
+                        sx={{
+                          bgcolor: darkTheme.accent.primary,
+                          '&:hover': {
+                            bgcolor: alpha(darkTheme.accent.primary, 0.8),
+                          },
+                        }}
                       >
                         {t('player.matches.viewBracket')}
                       </Button>
                     )}
-                  </Box>
+                  </Stack>
                 </CardContent>
               </Card>
-            </Box>
-          ))}
-        </Box>
-      )}
+            ))}
+          </Stack>
+        )}
 
-      {/* 취소 확인 다이얼로그 */}
-      <Dialog open={cancelDialogOpen} onClose={() => setCancelDialogOpen(false)}>
-        <DialogTitle>
-          {t('player.applications.cancelTitle', { defaultValue: 'Cancel Application' })}
-        </DialogTitle>
-        <DialogContent>
-          <Typography variant="body1">
-            {t('player.applications.cancelConfirm', { 
-              defaultValue: 'Are you sure you want to cancel your application for {{tournamentName}}?',
-              tournamentName: selectedApplication?.tournament?.name 
-            })}
-          </Typography>
-          <Alert severity="warning" sx={{ mt: 2 }}>
-            {t('player.applications.cancelWarning', { defaultValue: 'After cancellation, you will need to reapply. If payment is completed, refund process will be initiated.' })}
-          </Alert>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCancelDialogOpen(false)}>
-            {t('player.applications.no', { defaultValue: 'No' })}
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleCancelConfirm}
-          >
-            {t('player.applications.yesCancel', { defaultValue: 'Yes, Cancel' })}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+        {/* 취소 확인 다이얼로그 */}
+        <Dialog 
+          open={cancelDialogOpen} 
+          onClose={() => setCancelDialogOpen(false)}
+          PaperProps={{
+            sx: {
+              bgcolor: darkTheme.background.secondary,
+              color: darkTheme.text.primary,
+              border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+            },
+          }}
+        >
+          <DialogTitle sx={{ color: darkTheme.text.primary }}>
+            {t('player.applications.cancelTitle', { defaultValue: 'Cancel Application' })}
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ color: darkTheme.text.primary }}>
+              {t('player.applications.cancelConfirm', { 
+                defaultValue: 'Are you sure you want to cancel your application for {{tournamentName}}?',
+                tournamentName: selectedApplication?.tournament?.name 
+              })}
+            </Typography>
+            <Alert 
+              severity="warning" 
+              sx={{ 
+                mt: 2,
+                bgcolor: alpha(darkTheme.accent.warning, 0.1),
+                color: darkTheme.accent.warning,
+                border: `1px solid ${alpha(darkTheme.accent.warning, 0.3)}`,
+                '& .MuiAlert-icon': {
+                  color: darkTheme.accent.warning,
+                },
+              }}
+            >
+              {t('player.applications.cancelWarning', { defaultValue: 'After cancellation, you will need to reapply. If payment is completed, refund process will be initiated.' })}
+            </Alert>
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setCancelDialogOpen(false)}
+              sx={{
+                color: darkTheme.text.secondary,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.text.secondary, 0.1),
+                },
+              }}
+            >
+              {t('player.applications.no', { defaultValue: 'No' })}
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleCancelConfirm}
+              sx={{
+                bgcolor: darkTheme.accent.error,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.accent.error, 0.8),
+                },
+              }}
+            >
+              {t('player.applications.yesCancel', { defaultValue: 'Yes, Cancel' })}
+            </Button>
+          </DialogActions>
+        </Dialog>
+      </Container>
+    </Box>
   );
 };
 

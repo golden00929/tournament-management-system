@@ -24,6 +24,9 @@ import {
   TableHead,
   TableRow,
   LinearProgress,
+  IconButton,
+  Stack,
+  alpha,
 } from '@mui/material';
 import {
   ArrowBack as BackIcon,
@@ -101,243 +104,483 @@ const PlayerRankings: React.FC = () => {
     return 'error';
   };
 
+  // 다크 테마 색상 정의
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e',
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6',
+      gold: '#ffd700',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+    },
+    card: {
+      elevated: '#252525',
+    },
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* 헤더 */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<BackIcon />}
-          onClick={() => navigate('/player/dashboard')}
-        >
-          {t('player.matches.backToDashboard')}
-        </Button>
-        <Typography variant="h4" fontWeight="bold" sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <TrophyIcon fontSize="large" color="primary" />
-          {t('navigation.rankings')}
-        </Typography>
-        <LanguageSelector />
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+        color: darkTheme.text.primary,
+        pb: { xs: 10, sm: 4 },
+      }}
+    >
+      {/* 모바일 헤더 */}
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 10,
+          background: alpha(darkTheme.background.secondary, 0.95),
+          backdropFilter: 'blur(10px)',
+          borderBottom: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+          px: 2,
+          py: 1.5,
+        }}
+      >
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton
+              onClick={() => navigate('/player/dashboard')}
+              sx={{
+                color: darkTheme.text.secondary,
+                '&:hover': {
+                  bgcolor: alpha(darkTheme.text.secondary, 0.1),
+                  color: darkTheme.text.primary,
+                },
+              }}
+            >
+              <BackIcon />
+            </IconButton>
+            <TrophyIcon sx={{ color: darkTheme.accent.gold, fontSize: '1.5rem' }} />
+            <Typography variant="h6" fontWeight="600" color={darkTheme.text.primary}>
+              {t('navigation.rankings')}
+            </Typography>
+          </Stack>
+          <LanguageSelector darkMode={true} />
+        </Stack>
       </Box>
 
-      {/* 필터 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" fontWeight="bold" gutterBottom>
-          {t('player.rankings.filter')}
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
-          <Box sx={{ flex: 1 }}>
+      <Container maxWidth="sm" sx={{ px: { xs: 2, sm: 3 }, pt: 2 }}>
+
+        {/* 필터 */}
+        <Paper
+          sx={{
+            p: 3,
+            mb: 3,
+            bgcolor: darkTheme.card.elevated,
+            border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h6" fontWeight="bold" gutterBottom color={darkTheme.text.primary}>
+            {t('player.rankings.filter')}
+          </Typography>
+          <Stack spacing={2}>
             <FormControl fullWidth>
-              <InputLabel>{t('player.profile.skillLevel')}</InputLabel>
+              <InputLabel sx={{ color: darkTheme.text.secondary }}>
+                {t('player.profile.skillLevel')}
+              </InputLabel>
               <Select
                 value={filters.skillLevel}
                 onChange={handleFilterChange('skillLevel')}
                 label={t('player.profile.skillLevel')}
+                sx={{
+                  color: darkTheme.text.primary,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: alpha(darkTheme.text.secondary, 0.3),
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkTheme.accent.primary,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkTheme.accent.primary,
+                  },
+                  '& .MuiSelect-icon': {
+                    color: darkTheme.text.secondary,
+                  },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: darkTheme.background.secondary,
+                      color: darkTheme.text.primary,
+                      border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+                    },
+                  },
+                }}
               >
-                <MenuItem value="">{t('common.all')}</MenuItem>
-                <MenuItem value="a_class">{t('tournament.skillLevel.expert')}</MenuItem>
-                <MenuItem value="b_class">{t('tournament.skillLevel.advanced')}</MenuItem>
-                <MenuItem value="c_class">{t('tournament.skillLevel.intermediate')}</MenuItem>
-                <MenuItem value="d_class">{t('tournament.skillLevel.beginner')}</MenuItem>
+                <MenuItem value="" sx={{ color: darkTheme.text.primary }}>{t('common.all')}</MenuItem>
+                <MenuItem value="a_class" sx={{ color: darkTheme.text.primary }}>{t('tournament.skillLevel.expert')}</MenuItem>
+                <MenuItem value="b_class" sx={{ color: darkTheme.text.primary }}>{t('tournament.skillLevel.advanced')}</MenuItem>
+                <MenuItem value="c_class" sx={{ color: darkTheme.text.primary }}>{t('tournament.skillLevel.intermediate')}</MenuItem>
+                <MenuItem value="d_class" sx={{ color: darkTheme.text.primary }}>{t('tournament.skillLevel.beginner')}</MenuItem>
               </Select>
             </FormControl>
-          </Box>
 
-          <Box sx={{ flex: 1 }}>
             <FormControl fullWidth>
-              <InputLabel>{t('player.profile.province')}</InputLabel>
+              <InputLabel sx={{ color: darkTheme.text.secondary }}>
+                {t('player.profile.province')}
+              </InputLabel>
               <Select
                 value={filters.province}
                 onChange={handleFilterChange('province')}
                 label={t('player.profile.province')}
+                sx={{
+                  color: darkTheme.text.primary,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: alpha(darkTheme.text.secondary, 0.3),
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkTheme.accent.primary,
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: darkTheme.accent.primary,
+                  },
+                  '& .MuiSelect-icon': {
+                    color: darkTheme.text.secondary,
+                  },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: darkTheme.background.secondary,
+                      color: darkTheme.text.primary,
+                      border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+                    },
+                  },
+                }}
               >
-                <MenuItem value="">{t('common.all')}</MenuItem>
-                <MenuItem value="호치민시">{t('player.rankings.hoChiMinh')}</MenuItem>
-                <MenuItem value="하노이">{t('player.rankings.hanoi')}</MenuItem>
-                <MenuItem value="다낭">{t('player.rankings.danang')}</MenuItem>
-                <MenuItem value="부산">{t('player.rankings.busan')}</MenuItem>
-                <MenuItem value="서울시">{t('player.rankings.seoul')}</MenuItem>
+                <MenuItem value="" sx={{ color: darkTheme.text.primary }}>{t('common.all')}</MenuItem>
+                <MenuItem value="호치민시" sx={{ color: darkTheme.text.primary }}>{t('player.rankings.hoChiMinh')}</MenuItem>
+                <MenuItem value="하노이" sx={{ color: darkTheme.text.primary }}>{t('player.rankings.hanoi')}</MenuItem>
+                <MenuItem value="다낭" sx={{ color: darkTheme.text.primary }}>{t('player.rankings.danang')}</MenuItem>
+                <MenuItem value="부산" sx={{ color: darkTheme.text.primary }}>{t('player.rankings.busan')}</MenuItem>
+                <MenuItem value="서울시" sx={{ color: darkTheme.text.primary }}>{t('player.rankings.seoul')}</MenuItem>
               </Select>
             </FormControl>
-          </Box>
 
-          <Box sx={{ flex: 1 }}>
-            <FormControl fullWidth>
-              <InputLabel>{t('player.rankings.displayCount')}</InputLabel>
-              <Select
-                value={filters.limit}
-                onChange={handleFilterChange('limit')}
-                label={t('player.rankings.displayCount')}
+            <Stack direction="row" spacing={1}>
+              <FormControl fullWidth>
+                <InputLabel sx={{ color: darkTheme.text.secondary }}>
+                  {t('player.rankings.displayCount')}
+                </InputLabel>
+                <Select
+                  value={filters.limit}
+                  onChange={handleFilterChange('limit')}
+                  label={t('player.rankings.displayCount')}
+                  sx={{
+                    color: darkTheme.text.primary,
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: alpha(darkTheme.text.secondary, 0.3),
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkTheme.accent.primary,
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                      borderColor: darkTheme.accent.primary,
+                    },
+                    '& .MuiSelect-icon': {
+                      color: darkTheme.text.secondary,
+                    },
+                  }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: darkTheme.background.secondary,
+                        color: darkTheme.text.primary,
+                        border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+                      },
+                    },
+                  }}
+                >
+                  <MenuItem value={20} sx={{ color: darkTheme.text.primary }}>{t('player.rankings.top20')}</MenuItem>
+                  <MenuItem value={50} sx={{ color: darkTheme.text.primary }}>{t('player.rankings.top50')}</MenuItem>
+                  <MenuItem value={100} sx={{ color: darkTheme.text.primary }}>{t('player.rankings.top100')}</MenuItem>
+                </Select>
+              </FormControl>
+              
+              <Button 
+                variant="outlined" 
+                onClick={() => refetch()}
+                sx={{
+                  minWidth: 120,
+                  borderColor: alpha(darkTheme.text.secondary, 0.3),
+                  color: darkTheme.text.secondary,
+                  '&:hover': {
+                    borderColor: darkTheme.accent.primary,
+                    color: darkTheme.accent.primary,
+                    bgcolor: alpha(darkTheme.accent.primary, 0.1),
+                  },
+                }}
               >
-                <MenuItem value={20}>{t('player.rankings.top20')}</MenuItem>
-                <MenuItem value={50}>{t('player.rankings.top50')}</MenuItem>
-                <MenuItem value={100}>{t('player.rankings.top100')}</MenuItem>
-              </Select>
-            </FormControl>
+                {t('player.rankings.refresh')}
+              </Button>
+            </Stack>
+          </Stack>
+        </Paper>
+
+        {/* 로딩/에러 처리 */}
+        {isLoading && (
+          <Box display="flex" justifyContent="center" py={4}>
+            <CircularProgress sx={{ color: darkTheme.accent.primary }} />
           </Box>
-          
-          <Button 
-            variant="outlined" 
-            onClick={() => refetch()}
-            sx={{ minWidth: 120 }}
+        )}
+
+        {error && (
+          <Alert
+            severity="error"
+            sx={{
+              mb: 3,
+              bgcolor: alpha(darkTheme.accent.error, 0.1),
+              color: darkTheme.accent.error,
+              border: `1px solid ${alpha(darkTheme.accent.error, 0.3)}`,
+              '& .MuiAlert-icon': {
+                color: darkTheme.accent.error,
+              },
+            }}
           >
-            {t('player.rankings.refresh')}
-          </Button>
-        </Box>
-      </Paper>
+            {t('player.rankings.errorLoading')}
+          </Alert>
+        )}
 
-      {/* 로딩/에러 처리 */}
-      {isLoading && (
-        <Box display="flex" justifyContent="center" py={4}>
-          <CircularProgress />
-        </Box>
-      )}
+        {/* 랭킹 헤더 정보 */}
+        {rankingsData?.data && (
+          <>
+            <Box sx={{ mb: 3, p: 2, bgcolor: alpha(darkTheme.accent.primary, 0.1), borderRadius: 2 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography variant="body1" fontWeight="600" color={darkTheme.text.primary}>
+                  {t('player.rankings.totalPlayers', { count: rankingsData.data.players.length })}
+                </Typography>
+                <Typography variant="caption" color={darkTheme.text.secondary}>
+                  {t('player.rankings.lastUpdated', { date: formatDate(rankingsData.data.meta.lastUpdated) })}
+                </Typography>
+              </Stack>
+            </Box>
 
-      {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {t('player.rankings.errorLoading')}
-        </Alert>
-      )}
-
-      {/* 랭킹 테이블 */}
-      {rankingsData?.data && (
-        <>
-          <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">
-              {t('player.rankings.totalPlayers', { count: rankingsData.data.players.length })}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {t('player.rankings.lastUpdated', { date: formatDate(rankingsData.data.meta.lastUpdated) })}
-            </Typography>
-          </Box>
-
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: 'primary.main' }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.rankings.rank')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.rankings.player')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.profile.province')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.profile.skillLevel')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>ELO</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.profile.totalMatches')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.profile.winRate')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.rankings.consistency')}</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>{t('player.rankings.lastMatch')}</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rankingsData.data.players.map((player, index) => (
-                  <TableRow 
-                    key={index} 
-                    sx={{ 
-                      '&:nth-of-type(odd)': { bgcolor: 'action.hover' },
-                      ...(player.rank <= 3 && { bgcolor: 'warning.light', '&:hover': { bgcolor: 'warning.main' } })
-                    }}
-                  >
-                    <TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      {getRankIcon(player.rank)}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Avatar sx={{ bgcolor: 'primary.main', width: 32, height: 32 }}>
-                          {player.name.charAt(0)}
-                        </Avatar>
-                        <Typography variant="subtitle2" fontWeight="bold">
-                          {player.name}
+            {/* 랭킹 카드 목록 */}
+            <Stack spacing={2}>
+              {rankingsData.data.players.map((player, index) => (
+                <Card
+                  key={index}
+                  sx={{
+                    background: player.rank <= 3 
+                      ? `linear-gradient(135deg, ${darkTheme.card.elevated} 0%, ${alpha(darkTheme.accent.gold, 0.1)} 100%)`
+                      : darkTheme.card.elevated,
+                    border: player.rank <= 3 
+                      ? `2px solid ${alpha(darkTheme.accent.gold, 0.3)}`
+                      : `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+                    borderRadius: 3,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    '&::before': player.rank <= 3 ? {
+                      content: '""',
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: `linear-gradient(90deg, ${darkTheme.accent.gold}, ${darkTheme.accent.secondary})`
+                    } : {},
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    {/* 상단: 순위, 이름, ELO */}
+                    <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          width: 40,
+                          height: 40,
+                          borderRadius: '50%',
+                          background: player.rank <= 3 
+                            ? `linear-gradient(135deg, ${darkTheme.accent.gold}, ${darkTheme.accent.secondary})`
+                            : alpha(darkTheme.accent.primary, 0.2),
+                          color: player.rank <= 3 ? darkTheme.background.primary : darkTheme.accent.primary,
+                          fontWeight: 'bold',
+                          fontSize: '1.1rem'
+                        }}>
+                          {player.rank <= 3 ? getRankIcon(player.rank) : player.rank}
+                        </Box>
+                        <Stack>
+                          <Stack direction="row" alignItems="center" spacing={1}>
+                            <Avatar sx={{ 
+                              bgcolor: darkTheme.accent.primary, 
+                              width: 32, 
+                              height: 32,
+                              fontSize: '0.9rem'
+                            }}>
+                              {player.name.charAt(0)}
+                            </Avatar>
+                            <Typography variant="h6" fontWeight="bold" color={darkTheme.text.primary}>
+                              {player.name}
+                            </Typography>
+                          </Stack>
+                          <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                            {player.province} · {player.district}
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="h4" fontWeight="bold" color={darkTheme.accent.gold}>
+                          {player.eloRating}
+                        </Typography>
+                        <Typography variant="caption" color={darkTheme.text.secondary}>
+                          ELO RATING
                         </Typography>
                       </Box>
-                    </TableCell>
+                    </Stack>
 
-                    <TableCell>
-                      <Typography variant="body2">
-                        {player.province}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {player.district}
-                      </Typography>
-                    </TableCell>
-
-                    <TableCell>
+                    {/* 스킬 레벨 */}
+                    <Box sx={{ mb: 2 }}>
                       <Chip
                         size="small"
                         label={getSkillLevelDisplay(player.skillLevel).label}
-                        color={getSkillLevelDisplay(player.skillLevel).color}
+                        sx={{
+                          bgcolor: alpha(
+                            player.skillLevel === 'a_class' ? darkTheme.accent.error :
+                            player.skillLevel === 'b_class' ? darkTheme.accent.warning :
+                            player.skillLevel === 'c_class' ? darkTheme.accent.primary :
+                            darkTheme.accent.success, 0.2
+                          ),
+                          color: player.skillLevel === 'a_class' ? darkTheme.accent.error :
+                                 player.skillLevel === 'b_class' ? darkTheme.accent.warning :
+                                 player.skillLevel === 'c_class' ? darkTheme.accent.primary :
+                                 darkTheme.accent.success,
+                          border: `1px solid ${alpha(
+                            player.skillLevel === 'a_class' ? darkTheme.accent.error :
+                            player.skillLevel === 'b_class' ? darkTheme.accent.warning :
+                            player.skillLevel === 'c_class' ? darkTheme.accent.primary :
+                            darkTheme.accent.success, 0.3
+                          )}`,
+                        }}
                       />
-                    </TableCell>
+                    </Box>
 
-                    <TableCell>
-                      <Typography variant="h6" fontWeight="bold" color="primary">
-                        {player.eloRating}
-                      </Typography>
-                    </TableCell>
+                    {/* 통계 정보 */}
+                    <Stack spacing={2}>
+                      <Stack direction="row" justifyContent="space-between">
+                        <Stack spacing={1} sx={{ flex: 1 }}>
+                          <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                            경기 기록
+                          </Typography>
+                          <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
+                            {player.totalMatches} 경기
+                          </Typography>
+                          <Stack direction="row" spacing={0.5} alignItems="center">
+                            <Typography variant="caption" color={darkTheme.accent.success}>
+                              {player.wins}승
+                            </Typography>
+                            <Typography variant="caption" color={darkTheme.text.secondary}>/</Typography>
+                            <Typography variant="caption" color={darkTheme.accent.error}>
+                              {player.losses}패
+                            </Typography>
+                          </Stack>
+                        </Stack>
 
-                    <TableCell>
-                      <Typography variant="body2">
-                        {player.totalMatches} {t('player.rankings.matches')}
-                      </Typography>
-                      <Typography variant="caption" color="success.main">
-                        {player.wins} {t('player.profile.wins')}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary"> / </Typography>
-                      <Typography variant="caption" color="error.main">
-                        {player.losses} {t('player.profile.losses')}
-                      </Typography>
-                    </TableCell>
+                        <Stack spacing={1} sx={{ flex: 1 }}>
+                          <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                            승률
+                          </Typography>
+                          <Typography variant="h6" fontWeight="bold" color={darkTheme.accent.success}>
+                            {player.winRate.toFixed(1)}%
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={player.winRate}
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              bgcolor: alpha(darkTheme.text.secondary, 0.2),
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: player.winRate >= 80 ? darkTheme.accent.success :
+                                         player.winRate >= 60 ? darkTheme.accent.warning :
+                                         darkTheme.accent.error,
+                                borderRadius: 3
+                              }
+                            }}
+                          />
+                        </Stack>
 
-                    <TableCell>
-                      <Box sx={{ minWidth: 80 }}>
-                        <Typography variant="body2" fontWeight="bold">
-                          {player.winRate.toFixed(1)}%
+                        <Stack spacing={1} sx={{ flex: 1 }}>
+                          <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
+                            안정성
+                          </Typography>
+                          <Typography variant="body1" fontWeight="600" color={darkTheme.text.primary}>
+                            {player.consistencyIndex.toFixed(1)}
+                          </Typography>
+                          <LinearProgress
+                            variant="determinate"
+                            value={player.consistencyIndex}
+                            sx={{
+                              height: 4,
+                              borderRadius: 2,
+                              bgcolor: alpha(darkTheme.text.secondary, 0.2),
+                              '& .MuiLinearProgress-bar': {
+                                bgcolor: player.consistencyIndex >= 80 ? darkTheme.accent.success :
+                                         player.consistencyIndex >= 60 ? darkTheme.accent.warning :
+                                         darkTheme.accent.error,
+                                borderRadius: 2
+                              }
+                            }}
+                          />
+                        </Stack>
+                      </Stack>
+
+                      {/* 마지막 경기 */}
+                      <Box sx={{ 
+                        p: 1.5, 
+                        bgcolor: alpha(darkTheme.background.primary, 0.3), 
+                        borderRadius: 1,
+                        textAlign: 'center'
+                      }}>
+                        <Typography variant="caption" color={darkTheme.text.secondary}>
+                          마지막 경기: {formatDate(player.lastMatchDate)}
                         </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={player.winRate}
-                          color={getPerformanceColor(player.winRate)}
-                          sx={{ height: 6, borderRadius: 3 }}
-                        />
                       </Box>
-                    </TableCell>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              ))}
+            </Stack>
 
-                    <TableCell>
-                      <Box sx={{ minWidth: 80 }}>
-                        <Typography variant="body2">
-                          {player.consistencyIndex.toFixed(1)}
-                        </Typography>
-                        <LinearProgress
-                          variant="determinate"
-                          value={player.consistencyIndex}
-                          color={getPerformanceColor(player.consistencyIndex)}
-                          sx={{ height: 4, borderRadius: 2 }}
-                        />
-                      </Box>
-                    </TableCell>
-
-                    <TableCell>
-                      <Typography variant="caption" color="text.secondary">
-                        {formatDate(player.lastMatchDate)}
-                      </Typography>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
-            <Typography variant="body2" color="info.dark">
-              <strong>{t('player.rankings.explanationTitle', { defaultValue: '💡 Ranking Explanation:' })}</strong>
-              <br />
-              • <strong>{t('player.rankings.eloExplanation', { defaultValue: 'ELO Rating: Score representing player skill (1200 is average)' })}</strong>
-              <br />
-              • <strong>{t('player.rankings.consistencyExplanation', { defaultValue: 'Consistency Index: Degree of consistent performance (out of 100)' })}</strong>
-              <br />
-              • <strong>{t('player.rankings.rankExplanation', { defaultValue: 'Rank: Based on ELO rating, compared within same skill level' })}</strong>
-            </Typography>
-          </Box>
-        </>
-      )}
-    </Container>
+            {/* 설명 섹션 */}
+            <Box sx={{ 
+              mt: 3, 
+              p: 3, 
+              bgcolor: alpha(darkTheme.accent.secondary, 0.1), 
+              borderRadius: 2,
+              border: `1px solid ${alpha(darkTheme.accent.secondary, 0.2)}`
+            }}>
+              <Typography variant="body2" color={darkTheme.text.primary} sx={{ lineHeight: 1.8 }}>
+                <strong style={{ color: darkTheme.accent.secondary }}>💡 랭킹 설명:</strong>
+                <br />
+                • <strong style={{ color: darkTheme.text.accent }}>ELO 레이팅:</strong> 선수 실력을 나타내는 점수 (1200이 평균)
+                <br />
+                • <strong style={{ color: darkTheme.text.accent }}>안정성 지수:</strong> 일관된 경기력의 정도 (100점 만점)
+                <br />
+                • <strong style={{ color: darkTheme.text.accent }}>순위:</strong> ELO 레이팅 기준, 같은 실력 레벨 내에서 비교
+              </Typography>
+            </Box>
+          </>
+        )}
+      </Container>
+    </Box>
   );
 };
 
