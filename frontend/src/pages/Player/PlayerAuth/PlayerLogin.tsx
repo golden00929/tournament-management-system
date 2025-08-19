@@ -13,6 +13,8 @@ import {
   IconButton,
   Paper,
   Divider,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import {
@@ -40,6 +42,7 @@ const PlayerLogin: React.FC = () => {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberEmail, setRememberEmail] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
   const [redirecting, setRedirecting] = useState(false);
 
@@ -62,6 +65,15 @@ const PlayerLogin: React.FC = () => {
       }, 100);
     }
   }, [navigate, redirecting]);
+
+  useEffect(() => {
+    // 저장된 이메일 불러오기
+    const savedEmail = localStorage.getItem('playerRememberedEmail');
+    if (savedEmail) {
+      setFormData(prev => ({ ...prev, email: savedEmail }));
+      setRememberEmail(true);
+    }
+  }, []);
 
   const validateForm = () => {
     const errors: {[key: string]: string} = {};
@@ -117,6 +129,15 @@ const PlayerLogin: React.FC = () => {
       console.log('✅ PlayerLogin: Login successful', result);
       
       if (result.success) {
+        // 이메일 기억하기 처리
+        if (rememberEmail) {
+          localStorage.setItem('playerRememberedEmail', formData.email);
+          console.log('💾 PlayerLogin: Email saved for next login');
+        } else {
+          localStorage.removeItem('playerRememberedEmail');
+          console.log('🗑️ PlayerLogin: Saved email removed');
+        }
+
         // 사용자 정보에 role 추가 (API에서 role이 없을 경우 대비)
         const playerData = (result.data as any).player || (result.data as any).user;
         const userData = {
@@ -286,6 +307,27 @@ const PlayerLogin: React.FC = () => {
                     ),
                   }}
                   placeholder={t('auth.passwordPlaceholder', { defaultValue: 'Enter your password' })}
+                />
+              </Box>
+
+              {/* 이메일 기억하기 체크박스 */}
+              <Box sx={{ mb: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={rememberEmail}
+                      onChange={(e) => setRememberEmail(e.target.checked)}
+                      name="rememberEmail"
+                      color="primary"
+                    />
+                  }
+                  label={t('auth.rememberEmail', { defaultValue: 'Remember email address' })}
+                  sx={{ 
+                    color: 'text.secondary',
+                    '& .MuiFormControlLabel-label': {
+                      fontSize: '0.875rem'
+                    }
+                  }}
                 />
               </Box>
 
