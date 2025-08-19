@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Box,
   Stack,
@@ -15,6 +16,7 @@ import {
   Divider,
   MenuItem,
   FormHelperText,
+  alpha,
 } from '@mui/material';
 import {
   Email as EmailIcon,
@@ -29,50 +31,122 @@ import {
   CalendarToday as CalendarIcon,
 } from '@mui/icons-material';
 import { usePlayerRegisterMutation } from '../../../store/api/playerApiSlice';
+import LanguageSelector from '../../../components/LanguageSelector/LanguageSelector';
 
-// 베트남 지역 데이터
-const vietnamProvinces = [
-  { value: 'ho-chi-minh', label: '호치민시 (TP. Hồ Chí Minh)' },
-  { value: 'hanoi', label: '하노이 (Hà Nội)' },
-  { value: 'da-nang', label: '다낭 (Đà Nẵng)' },
-  { value: 'hai-phong', label: '하이퐁 (Hải Phòng)' },
-  { value: 'can-tho', label: '껀터 (Cần Thơ)' },
-  { value: 'bien-hoa', label: '비엔호아 (Biên Hòa)' },
-  { value: 'hue', label: '후에 (Huế)' },
-  { value: 'nha-trang', label: '나짱 (Nha Trang)' },
-  { value: 'vung-tau', label: '붕따우 (Vũng Tàu)' },
-  { value: 'other', label: '기타' },
-];
 
-const hoChiMinhDistricts = [
-  { value: 'district-1', label: '1군 (Quận 1)' },
-  { value: 'district-2', label: '2군 (Quận 2)' },
-  { value: 'district-3', label: '3군 (Quận 3)' },
-  { value: 'district-4', label: '4군 (Quận 4)' },
-  { value: 'district-5', label: '5군 (Quận 5)' },
-  { value: 'district-6', label: '6군 (Quận 6)' },
-  { value: 'district-7', label: '7군 (Quận 7)' },
-  { value: 'district-8', label: '8군 (Quận 8)' },
-  { value: 'district-9', label: '9군 (Quận 9)' },
-  { value: 'district-10', label: '10군 (Quận 10)' },
-  { value: 'district-11', label: '11군 (Quận 11)' },
-  { value: 'district-12', label: '12군 (Quận 12)' },
-  { value: 'binh-thanh', label: '빈탄군 (Quận Bình Thạnh)' },
-  { value: 'go-vap', label: '고밥군 (Quận Gò Vấp)' },
-  { value: 'phu-nhuan', label: '푸누안군 (Quận Phú Nhuận)' },
-  { value: 'tan-binh', label: '탄빈군 (Quận Tân Bình)' },
-  { value: 'tan-phu', label: '탄푸군 (Quận Tân Phú)' },
-  { value: 'thu-duc', label: '투득시 (TP. Thủ Đức)' },
-  { value: 'binh-chanh', label: '빈찬현 (Huyện Bình Chánh)' },
-  { value: 'can-gio', label: '깐저현 (Huyện Cần Giờ)' },
-  { value: 'cu-chi', label: '꾸찌현 (Huyện Củ Chi)' },
-  { value: 'hoc-mon', label: '혹몬현 (Huyện Hóc Môn)' },
-  { value: 'nha-be', label: '냐베현 (Huyện Nhà Bè)' },
-];
 
 const PlayerRegister: React.FC = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [playerRegister, { isLoading, error }] = usePlayerRegisterMutation();
+
+  // 베트남 지역 데이터 (다국어)
+  const vietnamProvinces = [
+    { value: 'ho-chi-minh', label: t('player.register.provinces.hoChiMinh') },
+    { value: 'hanoi', label: t('player.register.provinces.hanoi') },
+    { value: 'da-nang', label: t('player.register.provinces.daNang') },
+    { value: 'hai-phong', label: t('player.register.provinces.haiPhong') },
+    { value: 'can-tho', label: t('player.register.provinces.canTho') },
+    { value: 'bien-hoa', label: t('player.register.provinces.bienHoa') },
+    { value: 'hue', label: t('player.register.provinces.hue') },
+    { value: 'nha-trang', label: t('player.register.provinces.nhaTrang') },
+    { value: 'vung-tau', label: t('player.register.provinces.vungTau') },
+    { value: 'other', label: t('player.register.provinces.other') },
+  ];
+
+  const hoChiMinhDistricts = [
+    { value: 'district-1', label: t('player.register.provinces.hoChiMinh') + ' - Quận 1' },
+    { value: 'district-2', label: t('player.register.provinces.hoChiMinh') + ' - Quận 2' },
+    { value: 'district-3', label: t('player.register.provinces.hoChiMinh') + ' - Quận 3' },
+    { value: 'district-4', label: t('player.register.provinces.hoChiMinh') + ' - Quận 4' },
+    { value: 'district-5', label: t('player.register.provinces.hoChiMinh') + ' - Quận 5' },
+    { value: 'district-6', label: t('player.register.provinces.hoChiMinh') + ' - Quận 6' },
+    { value: 'district-7', label: t('player.register.provinces.hoChiMinh') + ' - Quận 7' },
+    { value: 'district-8', label: t('player.register.provinces.hoChiMinh') + ' - Quận 8' },
+    { value: 'district-9', label: t('player.register.provinces.hoChiMinh') + ' - Quận 9' },
+    { value: 'district-10', label: t('player.register.provinces.hoChiMinh') + ' - Quận 10' },
+    { value: 'district-11', label: t('player.register.provinces.hoChiMinh') + ' - Quận 11' },
+    { value: 'district-12', label: t('player.register.provinces.hoChiMinh') + ' - Quận 12' },
+    { value: 'binh-thanh', label: t('player.register.provinces.hoChiMinh') + ' - Quận Bình Thạnh' },
+    { value: 'go-vap', label: t('player.register.provinces.hoChiMinh') + ' - Quận Gò Vấp' },
+    { value: 'phu-nhuan', label: t('player.register.provinces.hoChiMinh') + ' - Quận Phú Nhuận' },
+    { value: 'tan-binh', label: t('player.register.provinces.hoChiMinh') + ' - Quận Tân Bình' },
+    { value: 'tan-phu', label: t('player.register.provinces.hoChiMinh') + ' - Quận Tân Phú' },
+    { value: 'thu-duc', label: t('player.register.provinces.hoChiMinh') + ' - TP. Thủ Đức' },
+    { value: 'binh-chanh', label: t('player.register.provinces.hoChiMinh') + ' - Huyện Bình Chánh' },
+    { value: 'can-gio', label: t('player.register.provinces.hoChiMinh') + ' - Huyện Cần Giờ' },
+    { value: 'cu-chi', label: t('player.register.provinces.hoChiMinh') + ' - Huyện Củ Chi' },
+    { value: 'hoc-mon', label: t('player.register.provinces.hoChiMinh') + ' - Huyện Hóc Môn' },
+    { value: 'nha-be', label: t('player.register.provinces.hoChiMinh') + ' - Huyện Nhà Bè' },
+  ];
+
+  // 다크 테마 색상 정의
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e',
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6',
+      gold: '#ffd700',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+    },
+    card: {
+      elevated: '#252525',
+      hover: '#2a2a2a',
+    }
+  };
+
+  // 공통 텍스트필드 스타일
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
+      color: darkTheme.text.primary,
+      '& fieldset': {
+        borderColor: alpha(darkTheme.text.secondary, 0.3),
+      },
+      '&:hover fieldset': {
+        borderColor: darkTheme.accent.primary,
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: darkTheme.accent.primary,
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: darkTheme.text.secondary,
+      '&.Mui-focused': {
+        color: darkTheme.accent.primary,
+      },
+    },
+    '& .MuiFormHelperText-root': {
+      color: darkTheme.text.secondary,
+      '&.Mui-error': {
+        color: darkTheme.accent.error,
+      },
+    },
+    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
+      color: darkTheme.text.secondary,
+    },
+    '& .MuiMenuItem-root': {
+      color: darkTheme.text.primary,
+      bgcolor: darkTheme.background.secondary,
+      '&:hover': {
+        bgcolor: alpha(darkTheme.accent.primary, 0.1),
+      },
+      '&.Mui-selected': {
+        bgcolor: alpha(darkTheme.accent.primary, 0.2),
+      },
+    },
+  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -95,59 +169,59 @@ const PlayerRegister: React.FC = () => {
 
     // 이름 검증
     if (!formData.name) {
-      errors.name = '이름을 입력해주세요.';
+      errors.name = t('player.register.validation.nameRequired');
     } else if (formData.name.length < 2) {
-      errors.name = '이름은 최소 2자 이상이어야 합니다.';
+      errors.name = t('player.register.validation.nameMinLength');
     }
 
     // 이메일 검증
     if (!formData.email) {
-      errors.email = '이메일을 입력해주세요.';
+      errors.email = t('player.register.validation.emailRequired');
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = '올바른 이메일 형식을 입력해주세요.';
+      errors.email = t('player.register.validation.emailInvalid');
     }
 
     // 전화번호 검증 (베트남 형식: 10자리)
     if (!formData.phone) {
-      errors.phone = '전화번호를 입력해주세요.';
+      errors.phone = t('player.register.validation.phoneRequired');
     } else if (!/^[0-9]{10}$/.test(formData.phone.replace(/\s/g, ''))) {
-      errors.phone = '전화번호는 10자리 숫자여야 합니다. (예: 0123456789)';
+      errors.phone = t('player.register.validation.phoneInvalid');
     }
 
     // 생년 검증
     const currentYear = new Date().getFullYear();
     if (!formData.birthYear) {
-      errors.birthYear = '출생년도를 입력해주세요.';
+      errors.birthYear = t('player.register.validation.birthYearRequired');
     } else if (formData.birthYear < 1950 || formData.birthYear > currentYear - 10) {
-      errors.birthYear = `출생년도는 1950년 ~ ${currentYear - 10}년 사이여야 합니다.`;
+      errors.birthYear = t('player.register.validation.birthYearInvalid', { maxYear: currentYear - 10 });
     }
 
     // 성별 검증
     if (!formData.gender) {
-      errors.gender = '성별을 선택해주세요.';
+      errors.gender = t('player.register.validation.genderRequired');
     }
 
     // 지역 검증
     if (!formData.province) {
-      errors.province = '지역을 선택해주세요.';
+      errors.province = t('player.register.validation.provinceRequired');
     }
 
     if (!formData.district) {
-      errors.district = '구/군을 선택해주세요.';
+      errors.district = t('player.register.validation.districtRequired');
     }
 
     // 비밀번호 검증
     if (!formData.password) {
-      errors.password = '비밀번호를 입력해주세요.';
+      errors.password = t('player.register.validation.passwordRequired');
     } else if (formData.password.length < 6) {
-      errors.password = '비밀번호는 최소 6자 이상이어야 합니다.';
+      errors.password = t('player.register.validation.passwordMinLength');
     }
 
     // 비밀번호 확인 검증
     if (!formData.confirmPassword) {
-      errors.confirmPassword = '비밀번호 확인을 입력해주세요.';
+      errors.confirmPassword = t('player.register.validation.confirmPasswordRequired');
     } else if (formData.password !== formData.confirmPassword) {
-      errors.confirmPassword = '비밀번호가 일치하지 않습니다.';
+      errors.confirmPassword = t('player.register.validation.passwordMismatch');
     }
 
     setValidationErrors(errors);
@@ -194,9 +268,9 @@ const PlayerRegister: React.FC = () => {
     if (error) {
       if ('data' in error) {
         const errorData = error.data as any;
-        return errorData?.message || '회원가입 중 오류가 발생했습니다.';
+        return errorData?.message || t('common.error', { defaultValue: 'An error occurred during registration.' });
       }
-      return '네트워크 오류가 발생했습니다.';
+      return t('common.error', { defaultValue: 'Network error occurred.' });
     }
     return '';
   };
@@ -204,79 +278,132 @@ const PlayerRegister: React.FC = () => {
   // 성공 메시지 표시
   if (registrationSuccess) {
     return (
-      <Container maxWidth="sm">
+      <Box sx={{ 
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+        color: darkTheme.text.primary,
+      }}>
+        <Container maxWidth="sm">
+          <Box
+            sx={{
+              minHeight: '100vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Paper 
+              elevation={8} 
+              sx={{ 
+                p: 4, 
+                textAlign: 'center', 
+                borderRadius: 3,
+                background: darkTheme.card.elevated,
+                border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+              }}
+            >
+              <SportsIcon sx={{ fontSize: 64, color: darkTheme.accent.success, mb: 2 }} />
+              <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
+                {t('player.register.success')}
+              </Typography>
+              <Typography variant="body1" sx={{ mb: 3, color: darkTheme.text.secondary }}>
+                {t('player.register.successMessage')}
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/player/login')}
+                sx={{ 
+                  mt: 2,
+                  bgcolor: darkTheme.accent.primary,
+                  '&:hover': {
+                    bgcolor: alpha(darkTheme.accent.primary, 0.8)
+                  }
+                }}
+              >
+                {t('player.register.loginButton')}
+              </Button>
+            </Paper>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  return (
+    <Box sx={{ 
+      minHeight: '100vh',
+      background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+      color: darkTheme.text.primary,
+    }}>
+      <Container maxWidth="md">
         <Box
           sx={{
             minHeight: '100vh',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            py: 3,
           }}
         >
-          <Paper elevation={8} sx={{ p: 4, textAlign: 'center', borderRadius: 3 }}>
-            <SportsIcon sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              회원가입 완료!
-            </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              계정이 성공적으로 생성되었습니다.
-              이제 로그인하여 대회에 참가하실 수 있습니다.
-            </Typography>
-            <Button
-              variant="contained"
-              size="large"
-              onClick={() => navigate('/player/login')}
-              sx={{ mt: 2 }}
-            >
-              로그인하기
-            </Button>
-          </Paper>
-        </Box>
-      </Container>
-    );
-  }
-
-  return (
-    <Container maxWidth="md">
-      <Box
-        sx={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          py: 3,
-        }}
-      >
-        <Paper 
-          elevation={8} 
-          sx={{ 
-            width: '100%',
-            borderRadius: 3,
-            overflow: 'hidden',
-          }}
-        >
-          {/* 헤더 */}
-          <Box
-            sx={{
-              bgcolor: 'primary.main',
-              color: 'white',
-              p: 4,
-              textAlign: 'center',
+          <Paper 
+            elevation={8} 
+            sx={{ 
+              width: '100%',
+              borderRadius: 3,
+              overflow: 'hidden',
+              background: darkTheme.card.elevated,
+              border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
             }}
           >
-            <SportsIcon sx={{ fontSize: 48, mb: 1 }} />
-            <Typography variant="h4" fontWeight="bold" gutterBottom>
-              선수 회원가입
-            </Typography>
-            <Typography variant="body1" sx={{ opacity: 0.9 }}>
-              대회 참가를 위한 계정을 만드세요
-            </Typography>
-          </Box>
+            {/* 헤더 */}
+            <Box
+              sx={{
+                background: `linear-gradient(135deg, ${darkTheme.accent.primary} 0%, ${darkTheme.accent.secondary} 100%)`,
+                color: darkTheme.text.primary,
+                p: 4,
+                textAlign: 'center',
+                position: 'relative',
+                '&::after': {
+                  content: '""',
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: '4px',
+                  background: `linear-gradient(90deg, ${darkTheme.accent.gold}, ${darkTheme.accent.secondary})`
+                }
+              }}
+            >
+              <SportsIcon sx={{ fontSize: 48, mb: 1, color: darkTheme.text.primary }} />
+              <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
+                {t('player.register.title')}
+              </Typography>
+              <Typography variant="body1" sx={{ opacity: 0.9, color: alpha(darkTheme.text.primary, 0.8) }}>
+                {t('player.register.subtitle')}
+              </Typography>
+              
+              {/* 언어 선택기 */}
+              <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+                <LanguageSelector darkMode={true} />
+              </Box>
+            </Box>
 
-          <Box sx={{ p: 4 }}>
+          <Box sx={{ p: 4, background: darkTheme.card.elevated }}>
             {/* 에러 메시지 */}
             {error && (
-              <Alert severity="error" sx={{ mb: 3 }}>
+              <Alert 
+                severity="error" 
+                sx={{ 
+                  mb: 3,
+                  bgcolor: alpha(darkTheme.accent.error, 0.1),
+                  color: darkTheme.accent.error,
+                  border: `1px solid ${alpha(darkTheme.accent.error, 0.3)}`,
+                  '& .MuiAlert-icon': {
+                    color: darkTheme.accent.error
+                  }
+                }}
+              >
                 {getErrorMessage()}
               </Alert>
             )}
@@ -284,14 +411,14 @@ const PlayerRegister: React.FC = () => {
             <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
                 {/* 기본 정보 */}
-                <Typography variant="h6" gutterBottom>
-                  기본 정보
+                <Typography variant="h6" gutterBottom sx={{ color: darkTheme.text.primary }}>
+                  {t('player.register.basicInfo')}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <TextField
                     fullWidth
-                    label="이름"
+                    label={t('player.register.name')}
                     value={formData.name}
                     onChange={handleInputChange('name')}
                     error={!!validationErrors.name}
@@ -303,12 +430,13 @@ const PlayerRegister: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
-                    placeholder="홍길동"
+                    placeholder={t('player.register.namePlaceholder')}
+                    sx={textFieldStyle}
                   />
 
                   <TextField
                     fullWidth
-                    label="이메일"
+                    label={t('player.register.email')}
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange('email')}
@@ -321,18 +449,19 @@ const PlayerRegister: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
-                    placeholder="example@email.com"
+                    placeholder={t('player.register.emailPlaceholder')}
+                    sx={textFieldStyle}
                   />
                 </Box>
 
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <TextField
                     fullWidth
-                    label="전화번호"
+                    label={t('player.register.phone')}
                     value={formData.phone}
                     onChange={handleInputChange('phone')}
                     error={!!validationErrors.phone}
-                    helperText={validationErrors.phone || '10자리 숫자 (예: 0123456789)'}
+                    helperText={validationErrors.phone || t('player.register.phoneHelperText')}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -340,12 +469,13 @@ const PlayerRegister: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
-                    placeholder="0123456789"
+                    placeholder={t('player.register.phonePlaceholder')}
+                    sx={textFieldStyle}
                   />
 
                   <TextField
                     fullWidth
-                    label="출생년도"
+                    label={t('player.register.birthYear')}
                     type="number"
                     value={formData.birthYear}
                     onChange={handleInputChange('birthYear')}
@@ -362,33 +492,42 @@ const PlayerRegister: React.FC = () => {
                       min: 1950,
                       max: new Date().getFullYear() - 10,
                     }}
+                    sx={textFieldStyle}
                   />
                 </Box>
 
                 <TextField
                   fullWidth
                   select
-                  label="성별"
+                  label={t('player.register.gender')}
                   value={formData.gender}
                   onChange={handleInputChange('gender')}
                   error={!!validationErrors.gender}
                   helperText={validationErrors.gender}
-                  sx={{ maxWidth: { sm: '50%' } }}
+                  sx={{ ...textFieldStyle, maxWidth: { sm: '50%' } }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: darkTheme.background.secondary,
+                        border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+                      },
+                    },
+                  }}
                 >
-                  <MenuItem value="male">남성</MenuItem>
-                  <MenuItem value="female">여성</MenuItem>
+                  <MenuItem value="male" sx={{ color: darkTheme.text.primary }}>{t('player.register.male')}</MenuItem>
+                  <MenuItem value="female" sx={{ color: darkTheme.text.primary }}>{t('player.register.female')}</MenuItem>
                 </TextField>
 
                 {/* 지역 정보 */}
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                  지역 정보
+                <Typography variant="h6" gutterBottom sx={{ mt: 2, color: darkTheme.text.primary }}>
+                  {t('player.register.locationInfo')}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <TextField
                     fullWidth
                     select
-                    label="지역"
+                    label={t('player.register.province')}
                     value={formData.province}
                     onChange={handleInputChange('province')}
                     error={!!validationErrors.province}
@@ -400,9 +539,18 @@ const PlayerRegister: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
+                    sx={textFieldStyle}
+                    MenuProps={{
+                      PaperProps: {
+                        sx: {
+                          bgcolor: darkTheme.background.secondary,
+                          border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+                        },
+                      },
+                    }}
                   >
                     {vietnamProvinces.map((province) => (
-                      <MenuItem key={province.value} value={province.value}>
+                      <MenuItem key={province.value} value={province.value} sx={{ color: darkTheme.text.primary }}>
                         {province.label}
                       </MenuItem>
                     ))}
@@ -412,37 +560,46 @@ const PlayerRegister: React.FC = () => {
                     <TextField
                       fullWidth
                       select
-                      label="구/군"
+                      label={t('player.register.district')}
                       value={formData.district}
                       onChange={handleInputChange('district')}
                       error={!!validationErrors.district}
                       helperText={validationErrors.district}
                       disabled={!formData.province}
+                      sx={textFieldStyle}
+                      MenuProps={{
+                        PaperProps: {
+                          sx: {
+                            bgcolor: darkTheme.background.secondary,
+                            border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+                          },
+                        },
+                      }}
                     >
                       {formData.province === 'ho-chi-minh' 
                         ? hoChiMinhDistricts.map((district) => (
-                            <MenuItem key={district.value} value={district.value}>
+                            <MenuItem key={district.value} value={district.value} sx={{ color: darkTheme.text.primary }}>
                               {district.label}
                             </MenuItem>
                           ))
-                        : <MenuItem value="general">시/군/구</MenuItem>
+                        : <MenuItem value="general" sx={{ color: darkTheme.text.primary }}>{t('player.register.districtGeneral')}</MenuItem>
                       }
                     </TextField>
                     {!formData.province && (
-                      <FormHelperText>먼저 지역을 선택해주세요</FormHelperText>
+                      <FormHelperText sx={{ color: darkTheme.text.secondary }}>{t('player.register.selectProvince')}</FormHelperText>
                     )}
                   </Box>
                 </Box>
 
                 {/* 비밀번호 */}
-                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                  비밀번호 설정
+                <Typography variant="h6" gutterBottom sx={{ mt: 2, color: darkTheme.text.primary }}>
+                  {t('player.register.passwordSetup')}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, flexDirection: { xs: 'column', sm: 'row' } }}>
                   <TextField
                     fullWidth
-                    label="비밀번호"
+                    label={t('player.register.password')}
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={handleInputChange('password')}
@@ -459,19 +616,21 @@ const PlayerRegister: React.FC = () => {
                           <IconButton
                             onClick={() => setShowPassword(!showPassword)}
                             edge="end"
-                            aria-label="비밀번호 표시 토글"
+                            aria-label="Toggle password visibility"
+                            sx={{ color: darkTheme.text.secondary }}
                           >
                             {showPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
-                    placeholder="최소 6자 이상"
+                    placeholder={t('player.register.passwordPlaceholder')}
+                    sx={textFieldStyle}
                   />
 
                   <TextField
                     fullWidth
-                    label="비밀번호 확인"
+                    label={t('player.register.confirmPassword')}
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={handleInputChange('confirmPassword')}
@@ -488,14 +647,16 @@ const PlayerRegister: React.FC = () => {
                           <IconButton
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             edge="end"
-                            aria-label="비밀번호 확인 표시 토글"
+                            aria-label="Toggle confirm password visibility"
+                            sx={{ color: darkTheme.text.secondary }}
                           >
                             {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
                         </InputAdornment>
                       ),
                     }}
-                    placeholder="비밀번호를 다시 입력"
+                    placeholder={t('player.register.confirmPasswordPlaceholder')}
+                    sx={textFieldStyle}
                   />
                 </Box>
 
@@ -511,19 +672,27 @@ const PlayerRegister: React.FC = () => {
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
                     mt: 2,
+                    bgcolor: darkTheme.accent.primary,
+                    '&:hover': {
+                      bgcolor: alpha(darkTheme.accent.primary, 0.8)
+                    },
+                    '&:disabled': {
+                      bgcolor: alpha(darkTheme.text.secondary, 0.3),
+                      color: alpha(darkTheme.text.secondary, 0.7)
+                    }
                   }}
                 >
-                  {isLoading ? '회원가입 중...' : '회원가입'}
+                  {isLoading ? t('player.register.registering') : t('player.register.register')}
                 </Button>
               </Stack>
             </form>
 
-            <Divider sx={{ my: 3 }} />
+            <Divider sx={{ my: 3, borderColor: alpha(darkTheme.text.secondary, 0.2) }} />
 
             {/* 로그인 링크 */}
             <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                이미 계정이 있으신가요?
+              <Typography variant="body2" gutterBottom sx={{ color: darkTheme.text.secondary }}>
+                {t('player.register.alreadyHaveAccount')}
               </Typography>
               <Link
                 component={RouterLink}
@@ -532,18 +701,21 @@ const PlayerRegister: React.FC = () => {
                 sx={{
                   fontWeight: 'bold',
                   textDecoration: 'none',
+                  color: darkTheme.accent.primary,
                   '&:hover': {
                     textDecoration: 'underline',
+                    color: alpha(darkTheme.accent.primary, 0.8),
                   },
                 }}
               >
-                로그인하기
+                {t('player.register.loginLink')}
               </Link>
             </Box>
           </Box>
         </Paper>
       </Box>
     </Container>
+    </Box>
   );
 };
 
