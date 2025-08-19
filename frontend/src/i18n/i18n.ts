@@ -236,6 +236,18 @@ const vi = {
       "rankExplanation": "Xếp hạng: Dựa trên điểm ELO, so sánh trong cùng trình độ"
     }
   },
+  "dashboard": {
+    "matches": "trận",
+    "winRate": "Tỷ lệ thắng",
+    "upcomingMatches": "Trận đấu sắp tới",
+    "noUpcomingMatches": "Không có trận đấu nào sắp tới",
+    "viewAllMatches": "Xem tất cả trận đấu",
+    "viewAllApplications": "Xem tất cả đăng ký",
+    "myMatches": "Trận đấu của tôi",
+    "availableTournaments": "Giải đấu có sẵn",
+    "noAvailableTournaments": "Hiện tại không có giải đấu nào có sẵn",
+    "browseTournaments": "Duyệt giải đấu"
+  },
   "tournament": {
     "status": {
       "draft": "Nháp",
@@ -485,6 +497,18 @@ const ko = {
       "rankExplanation": "순위: ELO 레이팅을 기준으로 산정, 같은 실력 수준 내에서 비교됩니다"
     }
   },
+  "dashboard": {
+    "matches": "경기",
+    "winRate": "승률",
+    "upcomingMatches": "다가오는 경기",
+    "noUpcomingMatches": "예정된 경기가 없습니다",
+    "viewAllMatches": "모든 경기 보기",
+    "viewAllApplications": "모든 신청 보기",
+    "myMatches": "내 경기",
+    "availableTournaments": "참가 가능한 대회",
+    "noAvailableTournaments": "현재 참가 가능한 대회가 없습니다",
+    "browseTournaments": "대회 둘러보기"
+  },
   "tournament": {
     "status": {
       "draft": "작성중",
@@ -733,6 +757,18 @@ const en = {
       "consistencyExplanation": "Consistency Index: Degree of consistent performance (out of 100)",
       "rankExplanation": "Rank: Based on ELO rating, compared within same skill level"
     }
+  },
+  "dashboard": {
+    "matches": "matches",
+    "winRate": "Win Rate",
+    "upcomingMatches": "Upcoming Matches",
+    "noUpcomingMatches": "No upcoming matches",
+    "viewAllMatches": "View All Matches",
+    "viewAllApplications": "View All Applications",
+    "myMatches": "My Matches",
+    "availableTournaments": "Available Tournaments",
+    "noAvailableTournaments": "No tournaments currently available",
+    "browseTournaments": "Browse Tournaments"
   },
   "tournament": {
     "status": {
