@@ -11,14 +11,13 @@ import {
   TextField,
   Alert,
   Divider,
-  Paper,
   Avatar,
   CircularProgress,
   Chip,
   IconButton,
   Stack,
-  alpha,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   ArrowBack as BackIcon,
   Save as SaveIcon,
@@ -614,9 +613,8 @@ const PlayerProfile: React.FC = () => {
             </form>
             </CardContent>
           </Card>
-        </Box>
+        </Container>
       </Box>
-    </Container>
   );
 };
 

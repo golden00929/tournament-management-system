@@ -16,13 +16,13 @@ import {
   FormControlLabel,
   Checkbox,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import {
   Email as EmailIcon,
   Lock as LockIcon,
   Visibility,
   VisibilityOff,
-  SportsHandball as SportsIcon,
   Login as LoginIcon,
 } from '@mui/icons-material';
 import LanguageSelector from '../../../components/LanguageSelector/LanguageSelector';

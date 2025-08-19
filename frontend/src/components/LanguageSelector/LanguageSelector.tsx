@@ -5,8 +5,8 @@ import {
   MenuItem,
   Box,
   Typography,
-  alpha,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import {
   Language as LanguageIcon,
