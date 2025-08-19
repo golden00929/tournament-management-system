@@ -12,21 +12,13 @@ import {
   Chip,
   LinearProgress,
   Alert,
-  Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Divider,
   CircularProgress,
   IconButton,
-  Grid,
   Stack,
   useTheme,
   alpha,
 } from '@mui/material';
 import {
-  SportsHandball as SportsIcon,
   EmojiEvents as TrophyIcon,
   TrendingUp as TrendingUpIcon,
   CalendarToday as CalendarIcon,
@@ -49,7 +41,7 @@ const PlayerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { t } = useTranslation();
-  const theme = useTheme(); // Hook을 최상단으로 이동
+  useTheme(); // Hook을 최상단으로 이동
 
   // 로그인 확인 - 한 번만 실행
   useEffect(() => {
@@ -61,7 +53,7 @@ const PlayerDashboard: React.FC = () => {
       navigate('/player/login', { replace: true });
       return;
     }
-  }, []); // 의존성 배열을 빈 배열로 변경하여 한 번만 실행
+  }, [navigate]); // navigate 의존성 추가
 
   // 사용자 인증 상태 확인
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -111,14 +103,6 @@ const PlayerDashboard: React.FC = () => {
     return levels[skillLevel as keyof typeof levels] || { label: skillLevel, color: 'default' as const };
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved': return 'success';
-      case 'pending': return 'warning';
-      case 'rejected': return 'error';
-      default: return 'default';
-    }
-  };
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -309,18 +293,16 @@ const PlayerDashboard: React.FC = () => {
             
             {/* ELO 및 통계 */}
             <Box sx={{ mt: 3, p: 2, bgcolor: alpha(darkTheme.background.primary, 0.5), borderRadius: 2 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Box sx={{ textAlign: 'center' }}>
-                    <Typography variant="h4" fontWeight="bold" color={darkTheme.accent.gold}>
-                      {profile?.eloRating}
-                    </Typography>
-                    <Typography variant="caption" color={darkTheme.text.secondary}>
-                      ELO RATING
-                    </Typography>
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
+              <Stack direction="row" spacing={2}>
+                <Box sx={{ flex: 1, textAlign: 'center' }}>
+                  <Typography variant="h4" fontWeight="bold" color={darkTheme.accent.gold}>
+                    {profile?.eloRating}
+                  </Typography>
+                  <Typography variant="caption" color={darkTheme.text.secondary}>
+                    ELO RATING
+                  </Typography>
+                </Box>
+                <Box sx={{ flex: 1 }}>
                   <Stack spacing={1}>
                     <Stack direction="row" justifyContent="space-between">
                       <Typography variant="body2" color={darkTheme.text.secondary}>
@@ -341,8 +323,8 @@ const PlayerDashboard: React.FC = () => {
                       </Typography>
                     </Stack>
                   </Stack>
-                </Grid>
-              </Grid>
+                </Box>
+              </Stack>
               
               {profile?.totalMatches && profile.totalMatches > 0 && (
                 <Box sx={{ mt: 2 }}>
@@ -678,80 +660,72 @@ const PlayerDashboard: React.FC = () => {
           zIndex: 10,
           display: { xs: 'block', sm: 'none' }
         }}>
-          <Grid container spacing={1}>
-            <Grid item xs={3}>
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => navigate('/player/tournaments')}
-                sx={{ 
-                  flexDirection: 'column',
-                  py: 1,
-                  color: darkTheme.text.secondary,
-                  '&:hover': { color: darkTheme.accent.primary }
-                }}
-              >
-                <SearchIcon fontSize="small" />
-                <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                  대회
-                </Typography>
-              </Button>
-            </Grid>
-            <Grid item xs={3}>
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => navigate('/player/applications')}
-                sx={{ 
-                  flexDirection: 'column',
-                  py: 1,
-                  color: darkTheme.text.secondary,
-                  '&:hover': { color: darkTheme.accent.primary }
-                }}
-              >
-                <TrophyIcon fontSize="small" />
-                <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                  신청
-                </Typography>
-              </Button>
-            </Grid>
-            <Grid item xs={3}>
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => navigate('/player/rankings')}
-                sx={{ 
-                  flexDirection: 'column',
-                  py: 1,
-                  color: darkTheme.text.secondary,
-                  '&:hover': { color: darkTheme.accent.primary }
-                }}
-              >
-                <TrendingUpIcon fontSize="small" />
-                <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                  랭킹
-                </Typography>
-              </Button>
-            </Grid>
-            <Grid item xs={3}>
-              <Button
-                fullWidth
-                variant="text"
-                onClick={() => navigate('/player/profile')}
-                sx={{ 
-                  flexDirection: 'column',
-                  py: 1,
-                  color: darkTheme.text.secondary,
-                  '&:hover': { color: darkTheme.accent.primary }
-                }}
-              >
-                <PersonIcon fontSize="small" />
-                <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
-                  프로필
-                </Typography>
-              </Button>
-            </Grid>
-          </Grid>
+          <Stack direction="row" spacing={1}>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/tournaments')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <SearchIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                대회
+              </Typography>
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/applications')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <TrophyIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                신청
+              </Typography>
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/rankings')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <TrendingUpIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                랭킹
+              </Typography>
+            </Button>
+            <Button
+              fullWidth
+              variant="text"
+              onClick={() => navigate('/player/profile')}
+              sx={{ 
+                flexDirection: 'column',
+                py: 1,
+                color: darkTheme.text.secondary,
+                '&:hover': { color: darkTheme.accent.primary }
+              }}
+            >
+              <PersonIcon fontSize="small" />
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', mt: 0.5 }}>
+                프로필
+              </Typography>
+            </Button>
+          </Stack>
         </Box>
       </Container>
     </Box>
