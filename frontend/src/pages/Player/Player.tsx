@@ -20,44 +20,52 @@ const Player: React.FC = () => {
   // Redux store에서 인증 상태 확인
   const authState = useSelector((state: RootState) => state.auth);
 
-  // 선수 인증 확인
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = getValidToken();
-      const user = getValidUser();
-      
-      const authenticated = !!(token && user && user.role === 'player');
-      setIsAuthenticated(authenticated);
-      setIsLoading(false);
-      
-      console.log('Player auth check:', { authenticated, token: !!token, user: user?.role });
-    };
-
-    checkAuth();
-  }, []); // 초기 로드 시에만 실행
-
-  // Redux store 변화 감지 (로그인 성공 시)
-  useEffect(() => {
-    if (authState.token && authState.user && authState.user.role === 'player') {
-      setIsAuthenticated(true);
-      setIsLoading(false);
-      console.log('Redux auth update: Player authenticated');
+  // 통합된 인증 상태 확인 함수
+  const checkAuthenticationState = React.useCallback(() => {
+    const token = getValidToken();
+    const user = getValidUser();
+    const reduxToken = authState.token;
+    const reduxUser = authState.user;
+    
+    // 우선순위: Redux > localStorage
+    let authenticated = false;
+    let authSource = 'none';
+    
+    if (reduxToken && reduxUser && reduxUser.role === 'player') {
+      authenticated = true;
+      authSource = 'redux';
+    } else if (token && user && user.role === 'player') {
+      authenticated = true;
+      authSource = 'localStorage';
     }
+    
+    console.log('🔍 Player: Unified auth check', {
+      authenticated,
+      authSource,
+      redux: { token: !!reduxToken, user: reduxUser?.role, userId: reduxUser?.id },
+      localStorage: { token: !!token, user: user?.role, userId: user?.id },
+      rawLocalStorage: {
+        token: localStorage.getItem('token'),
+        user: localStorage.getItem('user')
+      }
+    });
+    
+    return authenticated;
   }, [authState.token, authState.user]);
 
-  // localStorage 변경 감지 (수동 로그아웃 등)
+  // 단일 통합 인증 체크
+  useEffect(() => {
+    const authenticated = checkAuthenticationState();
+    setIsAuthenticated(authenticated);
+    setIsLoading(false);
+  }, [checkAuthenticationState]);
+
+  // localStorage 변경 감지만 유지
   useEffect(() => {
     const handleStorageChange = () => {
-      const token = getValidToken();
-      const user = getValidUser();
-      const authenticated = !!(token && user && user.role === 'player');
+      console.log('📢 Storage event detected');
+      const authenticated = checkAuthenticationState();
       setIsAuthenticated(authenticated);
-      console.log('Storage change: Player auth updated', { 
-        authenticated, 
-        token: !!token, 
-        user: user?.role,
-        userObject: user 
-      });
     };
     
     window.addEventListener('storage', handleStorageChange);
@@ -65,7 +73,7 @@ const Player: React.FC = () => {
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [checkAuthenticationState]);
 
   // 로딩 중일 때는 빈 화면 (또는 로딩 스피너)
   if (isLoading) {

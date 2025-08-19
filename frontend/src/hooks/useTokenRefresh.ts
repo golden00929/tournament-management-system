@@ -49,11 +49,11 @@ export const useTokenRefresh = () => {
     return timeUntilExpiry <= thirtyMinutes;
   }, [getTokenExpiration]);
 
-  // 토큰 갱신 함수
+  // 토큰 갱신 함수 (순환 참조 제거)
   const refreshToken = useCallback(async () => {
     try {
-      const refreshToken = localStorage.getItem('refreshToken');
-      if (!refreshToken) {
+      const refreshTokenValue = localStorage.getItem('refreshToken');
+      if (!refreshTokenValue) {
         console.log('❌ No refresh token available');
         return false;
       }
@@ -63,12 +63,18 @@ export const useTokenRefresh = () => {
       // 현재 경로가 선수 페이지인지 확인하여 적절한 API 엔드포인트 사용
       const isPlayerPage = window.location.pathname.startsWith('/player/');
       const refreshEndpoint = isPlayerPage ? '/player-auth/refresh' : '/auth/refresh';
+      const baseUrl = process.env.REACT_APP_API_URL || 
+                      (process.env.NODE_ENV === 'production' 
+                        ? 'https://tournament-management-system-production.up.railway.app/api'
+                        : 'http://localhost:5000/api');
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}${refreshEndpoint}`, {
+      console.log('🌐 Refresh API URL:', `${baseUrl}${refreshEndpoint}`);
+      
+      const response = await fetch(`${baseUrl}${refreshEndpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${refreshToken}`,
+          'Authorization': `Bearer ${refreshTokenValue}`,
         },
       });
 
@@ -82,14 +88,19 @@ export const useTokenRefresh = () => {
           }
           
           console.log('✅ Token refreshed successfully');
+          console.log('🆕 New token expiration info will be scheduled by caller');
           
-          // 다음 갱신 스케줄 설정
-          scheduleTokenRefresh(data.data.accessToken);
+          // 스토리지 이벤트 발생으로 다른 컴포넌트에 알림
+          window.dispatchEvent(new Event('storage'));
+          
           return true;
         }
+      } else {
+        console.log('❌ Token refresh failed with status:', response.status);
+        const errorData = await response.text();
+        console.log('❌ Error response:', errorData);
       }
       
-      console.log('❌ Token refresh failed');
       return false;
     } catch (error) {
       console.error('❌ Token refresh error:', error);
@@ -97,7 +108,7 @@ export const useTokenRefresh = () => {
     }
   }, []);
 
-  // 토큰 갱신 스케줄 설정
+  // 토큰 갱신 스케줄 설정 (순환 참조 해결)
   const scheduleTokenRefresh = useCallback((token: string) => {
     // 기존 타이머 클리어
     if (refreshTimerRef.current) {
@@ -117,12 +128,20 @@ export const useTokenRefresh = () => {
     const refreshTime = Math.max(timeUntilExpiry - (30 * 60 * 1000), 60 * 1000);
     
     console.log(`⏰ Token refresh scheduled in ${Math.round(refreshTime / 1000 / 60)} minutes`);
+    console.log(`🔍 Token expiration: ${expiration.toISOString()}`);
+    console.log(`🕐 Current time: ${now.toISOString()}`);
 
     refreshTimerRef.current = setTimeout(async () => {
       console.log('🔄 Auto-refreshing token...');
       const success = await refreshToken();
       
-      if (!success) {
+      if (success) {
+        // 성공 시 새 토큰으로 다시 스케줄
+        const newToken = localStorage.getItem('token');
+        if (newToken) {
+          scheduleTokenRefresh(newToken);
+        }
+      } else {
         console.log('❌ Auto-refresh failed, logging out...');
         // 갱신 실패 시 로그아웃
         localStorage.removeItem('token');
@@ -149,7 +168,14 @@ export const useTokenRefresh = () => {
       // 즉시 만료 확인
       if (isTokenExpiringSoon(token)) {
         console.log('⚠️ Token expires soon, refreshing immediately...');
-        refreshToken();
+        refreshToken().then((success) => {
+          if (success) {
+            const newToken = localStorage.getItem('token');
+            if (newToken) {
+              scheduleTokenRefresh(newToken);
+            }
+          }
+        });
       } else {
         // 미래 갱신 스케줄
         scheduleTokenRefresh(token);
