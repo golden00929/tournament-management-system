@@ -49,6 +49,7 @@ const PlayerDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { t } = useTranslation();
+  const theme = useTheme(); // Hook을 최상단으로 이동
 
   // 로그인 확인 - 한 번만 실행
   useEffect(() => {
@@ -169,7 +170,6 @@ const PlayerDashboard: React.FC = () => {
     );
   }
 
-  const theme = useTheme();
   const profile = profileData?.data;
   const applications = applicationsData?.data?.applications || [];
   const availableTournaments = availableTournamentsData?.data?.tournaments || [];
