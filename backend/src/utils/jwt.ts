@@ -70,10 +70,16 @@ export const generateRefreshToken = (payload: JwtPayload): string => {
  * 로그인 시 사용됩니다.
  */
 export const generateTokenPair = (payload: JwtPayload) => {
+  // 선수용 토큰은 더 긴 만료 시간 적용
+  const isPlayer = payload.role === 'player';
+  const actualExpiresIn = isPlayer 
+    ? (process.env.NODE_ENV === 'development' ? '24h' : '12h') // 선수용: 12시간
+    : env.JWT_ACCESS_EXPIRES_IN; // 관리자용: 기본 설정 (2시간)
+
   return {
     accessToken: generateAccessToken(payload),
     refreshToken: generateRefreshToken(payload),
-    expiresIn: env.JWT_ACCESS_EXPIRES_IN
+    expiresIn: actualExpiresIn // 실제 만료 시간 반환
   };
 };
 
