@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { prisma } from '../config/database';
-import bcrypt from 'bcryptjs';
+import bcrypt from 'bcrypt';
+import { env } from '../config/environment';
 
 const router = Router();
 
@@ -27,7 +28,7 @@ router.post('/initialize', async (req, res) => {
     }
 
     // 관리자 계정 생성
-    const hashedPassword = await bcrypt.hash('admin123', 12);
+    const hashedPassword = await bcrypt.hash('admin123', env.BCRYPT_SALT_ROUNDS);
     const admin = await prisma.admin.create({
       data: {
         email: 'admin@tournament.com',
@@ -138,7 +139,7 @@ router.post('/create-test-player', async (req, res) => {
     }
 
     // 테스트 선수 계정 생성
-    const hashedPlayerPassword = await bcrypt.hash('testpass123', 12);
+    const hashedPlayerPassword = await bcrypt.hash('testpass123', env.BCRYPT_SALT_ROUNDS);
     const player = await prisma.player.create({
       data: {
         email: 'testplayer@example.com',
