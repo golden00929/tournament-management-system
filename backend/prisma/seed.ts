@@ -28,6 +28,36 @@ async function main() {
     console.log('✅ 관리자 계정이 이미 존재합니다:', existingAdmin.email);
   }
 
+  // 테스트 선수 계정 확인 및 생성
+  const existingPlayer = await prisma.player.findUnique({
+    where: { email: 'testplayer@example.com' }
+  });
+
+  if (!existingPlayer) {
+    // 테스트 선수 계정 생성
+    const hashedPlayerPassword = await bcrypt.hash('testpass123', 12);
+    const player = await prisma.player.create({
+      data: {
+        email: 'testplayer@example.com',
+        password: hashedPlayerPassword,
+        name: '테스트 선수',
+        phone: '0123456789',
+        birthYear: 1990,
+        gender: 'male',
+        province: 'Ho Chi Minh City',
+        district: 'District 1',
+        skillLevel: 'c_class',
+        eloRating: 1200,
+        isVerified: true,
+        verifyToken: null,
+        verifyTokenExpiry: null,
+      },
+    });
+    console.log('✅ 테스트 선수 계정 생성:', player.email);
+  } else {
+    console.log('✅ 테스트 선수 계정이 이미 존재합니다:', existingPlayer.email);
+  }
+
   // 시스템 설정 생성
   const configs = [
     {
