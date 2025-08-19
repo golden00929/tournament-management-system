@@ -477,25 +477,25 @@ const PlayerRankings: React.FC = () => {
                       <Stack direction="row" justifyContent="space-between">
                         <Stack spacing={1} sx={{ flex: 1 }}>
                           <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
-                            경기 기록
+                            {t('player.rankings.matchRecords')}
                           </Typography>
                           <Typography variant="body2" color={darkTheme.text.primary} sx={{ fontWeight: 600 }}>
-                            {player.totalMatches} 경기
+                            {player.totalMatches} {t('player.rankings.matches')}
                           </Typography>
                           <Stack direction="row" spacing={0.5} alignItems="center">
                             <Typography variant="caption" color={darkTheme.accent.success}>
-                              {player.wins}승
+                              {player.wins}{t('player.profile.wins')}
                             </Typography>
                             <Typography variant="caption" color={darkTheme.text.secondary}>/</Typography>
                             <Typography variant="caption" color={darkTheme.accent.error}>
-                              {player.losses}패
+                              {player.losses}{t('player.profile.losses')}
                             </Typography>
                           </Stack>
                         </Stack>
 
                         <Stack spacing={1} sx={{ flex: 1 }}>
                           <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
-                            승률
+                            {t('player.profile.winRate')}
                           </Typography>
                           <Typography variant="h6" fontWeight="bold" color={darkTheme.accent.success}>
                             {player.winRate.toFixed(1)}%
@@ -519,7 +519,7 @@ const PlayerRankings: React.FC = () => {
 
                         <Stack spacing={1} sx={{ flex: 1 }}>
                           <Typography variant="body2" color={darkTheme.text.secondary} sx={{ fontSize: '0.8rem' }}>
-                            안정성
+                            {t('player.rankings.consistency')}
                           </Typography>
                           <Typography variant="body1" fontWeight="600" color={darkTheme.text.primary}>
                             {player.consistencyIndex.toFixed(1)}
@@ -550,7 +550,7 @@ const PlayerRankings: React.FC = () => {
                         textAlign: 'center'
                       }}>
                         <Typography variant="caption" color={darkTheme.text.secondary}>
-                          마지막 경기: {formatDate(player.lastMatchDate)}
+                          {t('player.rankings.lastMatch')}: {formatDate(player.lastMatchDate)}
                         </Typography>
                       </Box>
                     </Stack>
@@ -568,13 +568,13 @@ const PlayerRankings: React.FC = () => {
               border: `1px solid ${alpha(darkTheme.accent.secondary, 0.2)}`
             }}>
               <Typography variant="body2" color={darkTheme.text.primary} sx={{ lineHeight: 1.8 }}>
-                <strong style={{ color: darkTheme.accent.secondary }}>💡 랭킹 설명:</strong>
+                <strong style={{ color: darkTheme.accent.secondary }}>{t('player.rankings.explanationTitle')}</strong>
                 <br />
-                • <strong style={{ color: darkTheme.text.accent }}>ELO 레이팅:</strong> 선수 실력을 나타내는 점수 (1200이 평균)
+                • <strong style={{ color: darkTheme.text.accent }}>{t('player.rankings.eloExplanation')}</strong>
                 <br />
-                • <strong style={{ color: darkTheme.text.accent }}>안정성 지수:</strong> 일관된 경기력의 정도 (100점 만점)
+                • <strong style={{ color: darkTheme.text.accent }}>{t('player.rankings.consistencyExplanation')}</strong>
                 <br />
-                • <strong style={{ color: darkTheme.text.accent }}>순위:</strong> ELO 레이팅 기준, 같은 실력 레벨 내에서 비교
+                • <strong style={{ color: darkTheme.text.accent }}>{t('player.rankings.rankExplanation')}</strong>
               </Typography>
             </Box>
           </>

@@ -215,7 +215,10 @@
       "explanationTitle": "💡 Giải thích bảng xếp hạng:",
       "eloExplanation": "Điểm ELO: Điểm số thể hiện kỹ năng cầu thủ (1200 là trung bình)",
       "consistencyExplanation": "Chỉ số nhất quán: Mức độ thể hiện ổn định (tối đa 100)",
-      "rankExplanation": "Xếp hạng: Dựa trên điểm ELO, so sánh trong cùng trình độ"
+      "rankExplanation": "Xếp hạng: Dựa trên điểm ELO, so sánh trong cùng trình độ",
+      "matchRecords": "Kỷ lục trận đấu",
+      "winRate": "Tỷ lệ thắng",
+      "stability": "Tính ổn định"
     }
   },
   "tournament": {

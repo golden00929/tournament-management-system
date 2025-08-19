@@ -215,7 +215,10 @@
       "explanationTitle": "💡 랭킹 설명:",
       "eloExplanation": "ELO 레이팅: 선수의 실력을 나타내는 점수 (1200이 평균)",
       "consistencyExplanation": "안정성 지수: 꾸준한 실력 발휘 정도 (100점 만점)",
-      "rankExplanation": "순위: ELO 레이팅을 기준으로 산정, 같은 실력 수준 내에서 비교됩니다"
+      "rankExplanation": "순위: ELO 레이팅을 기준으로 산정, 같은 실력 수준 내에서 비교됩니다",
+      "matchRecords": "경기 기록",
+      "winRate": "승률",
+      "consistency": "안정성"
     }
   },
   "tournament": {

@@ -123,12 +123,28 @@ const TournamentList: React.FC = () => {
   const handleStatusChange = async (status: string) => {
     if (!selectedTournament) return;
 
+    console.log('🔄 Attempting to update tournament status:', {
+      tournamentId: selectedTournament,
+      newStatus: status,
+      timestamp: new Date().toISOString()
+    });
+
     try {
-      await updateTournamentStatus({ id: selectedTournament, status }).unwrap();
+      const result = await updateTournamentStatus({ id: selectedTournament, status }).unwrap();
+      console.log('✅ Tournament status updated successfully:', result);
       setAnchorEl(null);
       setSelectedTournament(null);
     } catch (err: any) {
-      console.error('Update tournament status error:', err);
+      console.error('❌ Update tournament status error:', {
+        error: err,
+        message: err?.data?.message || err?.message,
+        status: err?.status,
+        tournamentId: selectedTournament,
+        requestedStatus: status
+      });
+      
+      // 사용자에게 에러 알림
+      alert(`상태 변경 실패: ${err?.data?.message || err?.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
   };
 
