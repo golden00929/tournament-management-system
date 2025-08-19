@@ -19,7 +19,7 @@ import { loginSuccess } from '../../store/slices/authSlice';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('admin123!');
+  const [password, setPassword] = useState('');
   const [rememberEmail, setRememberEmail] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -33,9 +33,6 @@ const Login: React.FC = () => {
     if (savedEmail) {
       setEmail(savedEmail);
       setRememberEmail(true);
-    } else {
-      // 기본값 설정
-      setEmail('admin@tournament.com');
     }
   }, []);
 
@@ -168,7 +165,7 @@ const Login: React.FC = () => {
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
-              테스트 계정: admin@tournament.com / admin123!
+              Powered by KBJ
             </Typography>
           </Box>
         </Paper>
