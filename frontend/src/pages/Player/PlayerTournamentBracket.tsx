@@ -24,6 +24,7 @@ import {
   AccordionDetails,
   IconButton,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   ArrowBack as BackIcon,
   EmojiEvents as TrophyIcon,
@@ -46,6 +47,32 @@ const PlayerTournamentBracket: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [selectedBracket, setSelectedBracket] = useState<number>(0);
+
+  // Dark theme configuration
+  const darkTheme = {
+    background: {
+      primary: '#121212',
+      secondary: '#1e1e1e', 
+      tertiary: '#2d2d2d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#b0b0b0',
+      accent: '#e0e0e0',
+    },
+    accent: {
+      primary: '#bb86fc',
+      secondary: '#03dac6', 
+      gold: '#ffd700',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+    },
+    card: {
+      elevated: '#252525',
+      hover: '#2a2a2a',
+    },
+  };
 
   const {
     data: bracketData,
@@ -159,21 +186,48 @@ const PlayerTournamentBracket: React.FC = () => {
 
   if (bracketLoading) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-          <CircularProgress size={60} />
-        </Box>
-      </Container>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 50%, ${darkTheme.background.tertiary} 100%)`,
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+            <CircularProgress 
+              size={60} 
+              sx={{ color: darkTheme.accent.primary }}
+            />
+          </Box>
+        </Container>
+      </Box>
     );
   }
 
   if (bracketError) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="error">
-          {t('player.bracket.bracketNotFound')}
-        </Alert>
-      </Container>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 50%, ${darkTheme.background.tertiary} 100%)`,
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Alert 
+            severity="error"
+            sx={{
+              backgroundColor: alpha(darkTheme.accent.error, 0.1),
+              color: darkTheme.text.primary,
+              border: `1px solid ${alpha(darkTheme.accent.error, 0.3)}`,
+              '& .MuiAlert-icon': {
+                color: darkTheme.accent.error,
+              },
+            }}
+          >
+            {t('player.bracket.bracketNotFound')}
+          </Alert>
+        </Container>
+      </Box>
     );
   }
 
@@ -182,11 +236,28 @@ const PlayerTournamentBracket: React.FC = () => {
 
   if (brackets.length === 0) {
     return (
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        <Alert severity="info">
-          {t('player.bracket.noBracket')}
-        </Alert>
-      </Container>
+      <Box
+        sx={{
+          minHeight: '100vh',
+          background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 50%, ${darkTheme.background.tertiary} 100%)`,
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: 4 }}>
+          <Alert 
+            severity="info"
+            sx={{
+              backgroundColor: alpha(darkTheme.accent.primary, 0.1),
+              color: darkTheme.text.primary,
+              border: `1px solid ${alpha(darkTheme.accent.primary, 0.3)}`,
+              '& .MuiAlert-icon': {
+                color: darkTheme.accent.primary,
+              },
+            }}
+          >
+            {t('player.bracket.noBracket')}
+          </Alert>
+        </Container>
+      </Box>
     );
   }
 
@@ -195,39 +266,109 @@ const PlayerTournamentBracket: React.FC = () => {
   const myMatches = currentBracket ? currentBracket.matches.filter(isMyMatch) : [];
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      {/* 헤더 */}
-      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Button
-          variant="outlined"
-          startIcon={<BackIcon />}
-          onClick={() => navigate('/player/matches')}
-        >
-          {t('player.bracket.backToMatches')}
-        </Button>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" fontWeight="bold">
-            {tournament?.name} {t('player.bracket.title')}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {t('player.bracket.subtitle', { defaultValue: 'Check your match position and review the match schedule' })}
-          </Typography>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 50%, ${darkTheme.background.tertiary} 100%)`,
+      }}
+    >
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        {/* 헤더 */}
+        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button
+            variant="outlined"
+            startIcon={<BackIcon sx={{ color: darkTheme.text.primary }} />}
+            onClick={() => navigate('/player/matches')}
+            sx={{
+              borderColor: alpha(darkTheme.accent.primary, 0.5),
+              color: darkTheme.text.primary,
+              backgroundColor: alpha(darkTheme.card.elevated, 0.8),
+              '&:hover': {
+                borderColor: darkTheme.accent.primary,
+                backgroundColor: alpha(darkTheme.card.hover, 0.9),
+                transform: 'translateY(-2px)',
+                boxShadow: `0 8px 25px ${alpha(darkTheme.accent.primary, 0.15)}`,
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
+            {t('player.bracket.backToMatches')}
+          </Button>
+          <Box sx={{ flex: 1 }}>
+            <Typography 
+              variant="h4" 
+              fontWeight="bold"
+              sx={{ 
+                color: darkTheme.text.primary,
+                textShadow: `0 2px 10px ${alpha(darkTheme.accent.primary, 0.3)}`,
+              }}
+            >
+              {tournament?.name} {t('player.bracket.title')}
+            </Typography>
+            <Typography 
+              variant="body1" 
+              sx={{ color: darkTheme.text.secondary }}
+            >
+              {t('player.bracket.subtitle', { defaultValue: 'Check your match position and review the match schedule' })}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              backgroundColor: alpha(darkTheme.card.elevated, 0.8),
+              borderRadius: 2,
+              p: 1,
+            }}
+          >
+            <LanguageSelector />
+          </Box>
         </Box>
-        <LanguageSelector />
-      </Box>
 
       <Grid container spacing={3}>
         {/* 왼쪽: 내 경기 요약 */}
         <Grid sx={{ xs: 12, md: 4 }}>
-          <Card>
+          <Card
+            sx={{
+              backgroundColor: darkTheme.card.elevated,
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${alpha(darkTheme.accent.primary, 0.1)}`,
+              borderRadius: 3,
+              boxShadow: `0 8px 32px ${alpha(darkTheme.background.primary, 0.3)}`,
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 16px 48px ${alpha(darkTheme.background.primary, 0.4)}`,
+                border: `1px solid ${alpha(darkTheme.accent.primary, 0.2)}`,
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
             <CardContent>
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <PersonIcon color="primary" />
+              <Typography 
+                variant="h6" 
+                fontWeight="bold" 
+                gutterBottom 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  color: darkTheme.text.primary,
+                }}
+              >
+                <PersonIcon sx={{ color: darkTheme.accent.primary }} />
                 {t('player.bracket.myMatches')}
               </Typography>
 
               {myMatches.length === 0 ? (
-                <Alert severity="info">
+                <Alert 
+                  severity="info"
+                  sx={{
+                    backgroundColor: alpha(darkTheme.accent.primary, 0.1),
+                    color: darkTheme.text.primary,
+                    border: `1px solid ${alpha(darkTheme.accent.primary, 0.3)}`,
+                    '& .MuiAlert-icon': {
+                      color: darkTheme.accent.primary,
+                    },
+                  }}
+                >
                   {t('player.bracket.cannotFindMyMatches')}
                 </Alert>
               ) : (
@@ -236,38 +377,59 @@ const PlayerTournamentBracket: React.FC = () => {
                     const result = getMyResult(match);
                     return (
                       <React.Fragment key={match.id}>
-                        {index > 0 && <Divider />}
+                        {index > 0 && <Divider sx={{ borderColor: alpha(darkTheme.accent.primary, 0.1) }} />}
                         <ListItem 
                           sx={{ 
                             p: 2, 
-                            bgcolor: 'primary.light', 
-                            borderRadius: 1, 
+                            backgroundColor: alpha(darkTheme.accent.primary, 0.15), 
+                            borderRadius: 2, 
                             mb: 1,
                             border: '2px solid',
-                            borderColor: 'primary.main'
+                            borderColor: darkTheme.accent.primary,
+                            backdropFilter: 'blur(10px)',
+                            '&:hover': {
+                              backgroundColor: alpha(darkTheme.accent.primary, 0.2),
+                              transform: 'translateX(4px)',
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           }}
                         >
                           <ListItemText
                             primary={
                               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Typography variant="subtitle1" fontWeight="bold">
+                                <Typography 
+                                  variant="subtitle1" 
+                                  fontWeight="bold"
+                                  sx={{ color: darkTheme.text.primary }}
+                                >
                                   {match.roundName}
                                 </Typography>
                                 <Chip
                                   size="small"
                                   label={getStatusText(match.status)}
-                                  color={getStatusColor(match.status)}
+                                  sx={{
+                                    backgroundColor: alpha(darkTheme.accent[match.status === 'completed' ? 'success' : match.status === 'ongoing' ? 'warning' : 'primary'], 0.2),
+                                    color: darkTheme.text.primary,
+                                    border: `1px solid ${alpha(darkTheme.accent[match.status === 'completed' ? 'success' : match.status === 'ongoing' ? 'warning' : 'primary'], 0.4)}`,
+                                  }}
                                   icon={getStatusIcon(match.status)}
                                 />
                               </Box>
                             }
                             secondary={
                               <Box sx={{ mt: 1 }}>
-                                <Typography variant="body2" fontWeight="bold">
+                                <Typography 
+                                  variant="body2" 
+                                  fontWeight="bold"
+                                  sx={{ color: darkTheme.text.accent }}
+                                >
                                   🏁 {match.player1Name} vs {match.player2Name}
                                 </Typography>
                                 {match.scheduledTime && (
-                                  <Typography variant="body2" color="text.secondary">
+                                  <Typography 
+                                    variant="body2" 
+                                    sx={{ color: darkTheme.text.secondary }}
+                                  >
                                     🕐 {formatDateTime(match.scheduledTime)}
                                   </Typography>
                                 )}
@@ -275,7 +437,7 @@ const PlayerTournamentBracket: React.FC = () => {
                                   <Typography 
                                     variant="body2" 
                                     fontWeight="bold"
-                                    color={result.isWinner ? 'success.main' : 'error.main'}
+                                    sx={{ color: result.isWinner ? darkTheme.accent.success : darkTheme.accent.error }}
                                   >
                                     {result.isWinner ? `🏆 ${t('player.matches.win')}` : `😞 ${t('player.matches.loss')}`}: {result.myScore} - {result.opponentScore}
                                   </Typography>
@@ -293,43 +455,124 @@ const PlayerTournamentBracket: React.FC = () => {
           </Card>
 
           {/* 대진표 통계 */}
-          <Card sx={{ mt: 3 }}>
+          <Card 
+            sx={{ 
+              mt: 3,
+              backgroundColor: darkTheme.card.elevated,
+              backdropFilter: 'blur(20px)',
+              border: `1px solid ${alpha(darkTheme.accent.secondary, 0.1)}`,
+              borderRadius: 3,
+              boxShadow: `0 8px 32px ${alpha(darkTheme.background.primary, 0.3)}`,
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: `0 16px 48px ${alpha(darkTheme.background.primary, 0.4)}`,
+                border: `1px solid ${alpha(darkTheme.accent.secondary, 0.2)}`,
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+          >
             <CardContent>
-              <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <ScheduleIcon color="primary" />
+              <Typography 
+                variant="h6" 
+                fontWeight="bold" 
+                gutterBottom 
+                sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  color: darkTheme.text.primary,
+                }}
+              >
+                <ScheduleIcon sx={{ color: darkTheme.accent.secondary }} />
                 {t('player.bracket.bracketInfo')}
               </Typography>
 
               <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, textAlign: 'center' }}>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold" color="primary.main">
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: alpha(darkTheme.accent.primary, 0.1),
+                    border: `1px solid ${alpha(darkTheme.accent.primary, 0.2)}`,
+                  }}
+                >
+                  <Typography 
+                    variant="h4" 
+                    fontWeight="bold" 
+                    sx={{ color: darkTheme.accent.primary }}
+                  >
                     {currentBracket?.matches.length || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    sx={{ color: darkTheme.text.secondary }}
+                  >
                     {t('player.bracket.totalMatches')}
                   </Typography>
                 </Box>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold" color="success.main">
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: alpha(darkTheme.accent.success, 0.1),
+                    border: `1px solid ${alpha(darkTheme.accent.success, 0.2)}`,
+                  }}
+                >
+                  <Typography 
+                    variant="h4" 
+                    fontWeight="bold" 
+                    sx={{ color: darkTheme.accent.success }}
+                  >
                     {currentBracket?.matches.filter((m: any) => m.status === 'completed').length || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    sx={{ color: darkTheme.text.secondary }}
+                  >
                     {t('player.matches.completedMatches')}
                   </Typography>
                 </Box>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold" color="warning.main">
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: alpha(darkTheme.accent.warning, 0.1),
+                    border: `1px solid ${alpha(darkTheme.accent.warning, 0.2)}`,
+                  }}
+                >
+                  <Typography 
+                    variant="h4" 
+                    fontWeight="bold" 
+                    sx={{ color: darkTheme.accent.warning }}
+                  >
                     {currentBracket?.matches.filter((m: any) => m.status === 'scheduled').length || 0}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    sx={{ color: darkTheme.text.secondary }}
+                  >
                     {t('player.matches.scheduledMatches')}
                   </Typography>
                 </Box>
-                <Box>
-                  <Typography variant="h4" fontWeight="bold">
+                <Box
+                  sx={{
+                    p: 2,
+                    borderRadius: 2,
+                    backgroundColor: alpha(darkTheme.accent.gold, 0.1),
+                    border: `1px solid ${alpha(darkTheme.accent.gold, 0.2)}`,
+                  }}
+                >
+                  <Typography 
+                    variant="h4" 
+                    fontWeight="bold" 
+                    sx={{ color: darkTheme.accent.gold }}
+                  >
                     {roundGroups.length}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography 
+                    variant="body2" 
+                    sx={{ color: darkTheme.text.secondary }}
+                  >
                     {t('player.bracket.totalRounds')}
                   </Typography>
                 </Box>
@@ -342,8 +585,37 @@ const PlayerTournamentBracket: React.FC = () => {
         <Grid sx={{ xs: 12, md: 8 }}>
           {/* 대진표 선택 탭 */}
           {brackets.length > 1 && (
-            <Paper sx={{ mb: 3 }}>
-              <Tabs value={selectedBracket} onChange={handleBracketChange}>
+            <Paper 
+              sx={{ 
+                mb: 3,
+                backgroundColor: darkTheme.card.elevated,
+                backdropFilter: 'blur(20px)',
+                border: `1px solid ${alpha(darkTheme.accent.primary, 0.1)}`,
+                borderRadius: 2,
+                boxShadow: `0 4px 20px ${alpha(darkTheme.background.primary, 0.3)}`,
+              }}
+            >
+              <Tabs 
+                value={selectedBracket} 
+                onChange={handleBracketChange}
+                sx={{
+                  '& .MuiTab-root': {
+                    color: darkTheme.text.secondary,
+                    '&.Mui-selected': {
+                      color: darkTheme.accent.primary,
+                    },
+                    '&:hover': {
+                      color: darkTheme.text.primary,
+                    },
+                  },
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: darkTheme.accent.primary,
+                  },
+                  '& .MuiTabs-flexContainer': {
+                    gap: 2,
+                  },
+                }}
+              >
                 {brackets.map((bracket, index) => (
                   <Tab 
                     key={bracket.id} 
@@ -355,34 +627,92 @@ const PlayerTournamentBracket: React.FC = () => {
           )}
 
           {/* 라운드별 경기 목록 */}
-          <Typography variant="h5" fontWeight="bold" gutterBottom>
+          <Typography 
+            variant="h5" 
+            fontWeight="bold" 
+            gutterBottom
+            sx={{ 
+              color: darkTheme.text.primary,
+              textShadow: `0 2px 10px ${alpha(darkTheme.accent.secondary, 0.3)}`,
+              mb: 3,
+            }}
+          >
             {currentBracket?.name} - {currentBracket?.eventType === 'singles' ? t('player.bracket.singles') : t('player.bracket.doubles')}
           </Typography>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {roundGroups.map((roundGroup) => (
-              <Accordion key={roundGroup.roundName} defaultExpanded={roundGroup.matches.some(isMyMatch)}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+              <Accordion 
+                key={roundGroup.roundName} 
+                defaultExpanded={roundGroup.matches.some(isMyMatch)}
+                sx={{
+                  backgroundColor: darkTheme.card.elevated,
+                  backdropFilter: 'blur(20px)',
+                  border: `1px solid ${alpha(darkTheme.accent.primary, 0.1)}`,
+                  borderRadius: 2,
+                  boxShadow: `0 4px 20px ${alpha(darkTheme.background.primary, 0.2)}`,
+                  '&:hover': {
+                    border: `1px solid ${alpha(darkTheme.accent.primary, 0.2)}`,
+                    boxShadow: `0 8px 30px ${alpha(darkTheme.background.primary, 0.3)}`,
+                  },
+                  '&.Mui-expanded': {
+                    border: `1px solid ${alpha(darkTheme.accent.secondary, 0.3)}`,
+                    boxShadow: `0 8px 30px ${alpha(darkTheme.accent.secondary, 0.1)}`,
+                  },
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  '&:before': {
+                    display: 'none',
+                  },
+                }}
+              >
+                <AccordionSummary 
+                  expandIcon={<ExpandMoreIcon sx={{ color: darkTheme.accent.primary }} />}
+                  sx={{
+                    backgroundColor: 'transparent',
+                    '&:hover': {
+                      backgroundColor: alpha(darkTheme.accent.primary, 0.05),
+                    },
+                    '& .MuiAccordionSummary-content': {
+                      margin: 0,
+                    },
+                  }}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                    <Typography variant="h6" fontWeight="bold">
+                    <Typography 
+                      variant="h6" 
+                      fontWeight="bold"
+                      sx={{ color: darkTheme.text.primary }}
+                    >
                       {roundGroup.roundName}
                     </Typography>
                     <Chip 
                       size="small" 
                       label={`${roundGroup.matches.length} ${t('player.matches.match')}`}
-                      color="primary"
-                      variant="outlined"
+                      sx={{
+                        backgroundColor: alpha(darkTheme.accent.primary, 0.15),
+                        color: darkTheme.text.primary,
+                        border: `1px solid ${alpha(darkTheme.accent.primary, 0.3)}`,
+                      }}
                     />
                     {roundGroup.matches.some(isMyMatch) && (
                       <Chip 
                         size="small" 
                         label={t('player.bracket.myMatch')}
-                        color="success"
+                        sx={{
+                          backgroundColor: alpha(darkTheme.accent.success, 0.15),
+                          color: darkTheme.text.primary,
+                          border: `1px solid ${alpha(darkTheme.accent.success, 0.3)}`,
+                        }}
                       />
                     )}
                   </Box>
                 </AccordionSummary>
-                <AccordionDetails>
+                <AccordionDetails
+                  sx={{
+                    backgroundColor: alpha(darkTheme.background.secondary, 0.3),
+                    borderTop: `1px solid ${alpha(darkTheme.accent.primary, 0.1)}`,
+                  }}
+                >
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {roundGroup.matches.map((match: any) => {
                       const isMyMatchFlag = isMyMatch(match);
@@ -392,54 +722,114 @@ const PlayerTournamentBracket: React.FC = () => {
                         <Card 
                           key={match.id}
                           sx={{ 
+                            backgroundColor: isMyMatchFlag 
+                              ? alpha(darkTheme.accent.primary, 0.15) 
+                              : alpha(darkTheme.card.elevated, 0.8),
+                            backdropFilter: 'blur(20px)',
                             border: isMyMatchFlag ? '2px solid' : '1px solid',
-                            borderColor: isMyMatchFlag ? 'primary.main' : 'divider',
-                            bgcolor: isMyMatchFlag ? 'primary.light' : 'background.paper'
+                            borderColor: isMyMatchFlag ? darkTheme.accent.primary : alpha(darkTheme.accent.secondary, 0.2),
+                            borderRadius: 2,
+                            boxShadow: isMyMatchFlag 
+                              ? `0 8px 25px ${alpha(darkTheme.accent.primary, 0.2)}` 
+                              : `0 4px 15px ${alpha(darkTheme.background.primary, 0.2)}`,
+                            '&:hover': {
+                              transform: 'translateY(-2px)',
+                              borderColor: isMyMatchFlag ? darkTheme.accent.primary : darkTheme.accent.secondary,
+                              boxShadow: isMyMatchFlag 
+                                ? `0 12px 35px ${alpha(darkTheme.accent.primary, 0.3)}` 
+                                : `0 8px 25px ${alpha(darkTheme.background.primary, 0.3)}`,
+                              backgroundColor: isMyMatchFlag 
+                                ? alpha(darkTheme.accent.primary, 0.2) 
+                                : darkTheme.card.hover,
+                            },
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                           }}
                         >
                           <CardContent sx={{ py: 2 }}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                              <Typography variant="subtitle2" fontWeight="bold">
+                              <Typography 
+                                variant="subtitle2" 
+                                fontWeight="bold"
+                                sx={{ color: darkTheme.text.primary }}
+                              >
                                 {t('player.matches.match')} {match.matchNumber}
                                 {isMyMatchFlag && (
                                   <Chip 
                                     size="small" 
                                     label={t('player.bracket.myMatch')} 
-                                    color="success" 
-                                    sx={{ ml: 1 }}
+                                    sx={{ 
+                                      ml: 1,
+                                      backgroundColor: alpha(darkTheme.accent.success, 0.2),
+                                      color: darkTheme.text.primary,
+                                      border: `1px solid ${alpha(darkTheme.accent.success, 0.4)}`,
+                                    }}
                                   />
                                 )}
                               </Typography>
                               <Chip
                                 size="small"
                                 label={getStatusText(match.status)}
-                                color={getStatusColor(match.status)}
+                                sx={{
+                                  backgroundColor: alpha(
+                                    darkTheme.accent[
+                                      match.status === 'completed' ? 'success' : 
+                                      match.status === 'ongoing' ? 'warning' : 
+                                      match.status === 'cancelled' ? 'error' : 'primary'
+                                    ], 0.2
+                                  ),
+                                  color: darkTheme.text.primary,
+                                  border: `1px solid ${alpha(
+                                    darkTheme.accent[
+                                      match.status === 'completed' ? 'success' : 
+                                      match.status === 'ongoing' ? 'warning' : 
+                                      match.status === 'cancelled' ? 'error' : 'primary'
+                                    ], 0.4
+                                  )}`,
+                                }}
                                 icon={getStatusIcon(match.status)}
                               />
                             </Box>
                             
-                            <Typography variant="body1" fontWeight="bold" sx={{ mb: 1 }}>
+                            <Typography 
+                              variant="body1" 
+                              fontWeight="bold" 
+                              sx={{ 
+                                mb: 1,
+                                color: darkTheme.text.accent,
+                              }}
+                            >
                               🏁 {match.player1Name} vs {match.player2Name}
                             </Typography>
 
                             <Grid container spacing={2}>
                               <Grid sx={{ xs: 12, sm: 6 }}>
                                 {match.scheduledTime && (
-                                  <Typography variant="body2" color="text.secondary">
+                                  <Typography 
+                                    variant="body2" 
+                                    sx={{ color: darkTheme.text.secondary }}
+                                  >
                                     🕐 {formatDateTime(match.scheduledTime)}
                                   </Typography>
                                 )}
                               </Grid>
                               <Grid sx={{ xs: 12, sm: 6 }}>
                                 {match.status === 'completed' && (
-                                  <Typography variant="body2" fontWeight="bold">
+                                  <Typography 
+                                    variant="body2" 
+                                    fontWeight="bold"
+                                    sx={{ color: darkTheme.text.accent }}
+                                  >
                                     📊 {match.player1Score} - {match.player2Score}
                                     {result && (
                                       <Chip
                                         size="small"
                                         label={result.isWinner ? t('player.matches.win') : t('player.matches.loss')}
-                                        color={result.isWinner ? 'success' : 'error'}
-                                        sx={{ ml: 1 }}
+                                        sx={{ 
+                                          ml: 1,
+                                          backgroundColor: alpha(result.isWinner ? darkTheme.accent.success : darkTheme.accent.error, 0.2),
+                                          color: darkTheme.text.primary,
+                                          border: `1px solid ${alpha(result.isWinner ? darkTheme.accent.success : darkTheme.accent.error, 0.4)}`,
+                                        }}
                                       />
                                     )}
                                   </Typography>
@@ -457,7 +847,8 @@ const PlayerTournamentBracket: React.FC = () => {
           </Box>
         </Grid>
       </Grid>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
