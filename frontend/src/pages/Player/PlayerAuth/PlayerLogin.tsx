@@ -53,8 +53,14 @@ const PlayerLogin: React.FC = () => {
     
     console.log('🔍 PlayerLogin: Checking existing auth', { 
       token: !!token, 
+      tokenLength: token?.length || 0,
       user: user?.role,
-      redirecting 
+      userId: user?.id,
+      userName: user?.name,
+      userEmail: user?.email,
+      redirecting,
+      localStorage_token: localStorage.getItem('token'),
+      localStorage_user: localStorage.getItem('user')
     });
     
     if (token && user && user.role === 'player' && !redirecting) {
@@ -125,6 +131,9 @@ const PlayerLogin: React.FC = () => {
 
     try {
       console.log('🚀 PlayerLogin: Sending login request', formData);
+      console.log('🌐 API Base URL:', process.env.REACT_APP_API_URL);
+      console.log('🔗 Full API URL:', `${process.env.REACT_APP_API_URL || 'https://tournament-management-system-production.up.railway.app/api'}/player-auth/login`);
+      
       const result = await playerLogin(formData).unwrap();
       console.log('✅ PlayerLogin: Login successful', result);
       
@@ -175,11 +184,27 @@ const PlayerLogin: React.FC = () => {
       }
     } catch (err: any) {
       console.error('❌ PlayerLogin: Login failed', err);
-      console.error('Error details:', {
+      console.error('🔍 Detailed error analysis:', {
         message: err?.message,
         data: err?.data,
-        status: err?.status
+        status: err?.status,
+        error: err?.error,
+        originalStatus: err?.originalStatus,
+        isUnhandledError: err?.isUnhandledError,
+        name: err?.name,
+        stack: err?.stack
       });
+      
+      // 네트워크 에러 여부 확인
+      if (err?.status === 'FETCH_ERROR') {
+        console.error('🌐 Network fetch error - 네트워크 연결 문제 또는 CORS 에러');
+      } else if (err?.status === 'PARSING_ERROR') {
+        console.error('📝 Response parsing error - 응답 파싱 실패');
+      } else if (err?.status === 'TIMEOUT_ERROR') {
+        console.error('⏰ Request timeout error - 요청 시간 초과');
+      } else if (err?.originalStatus) {
+        console.error(`🔴 HTTP ${err.originalStatus} error from server`);
+      }
     }
   };
 
