@@ -180,4 +180,59 @@ router.post('/create-test-player', async (req, res) => {
   }
 });
 
+// 테스트 선수 계정 재생성 (bcrypt 호환성 문제 해결용)
+router.post('/recreate-test-player', async (req, res) => {
+  try {
+    console.log('🔄 테스트 선수 계정 재생성 시작...');
+
+    // 기존 테스트 선수 삭제
+    const deletedPlayer = await prisma.player.deleteMany({
+      where: { email: 'testplayer@example.com' }
+    });
+
+    console.log(`🗑️ 기존 테스트 선수 삭제됨: ${deletedPlayer.count}개`);
+
+    // 새로운 테스트 선수 계정 생성 (올바른 bcrypt 사용)
+    const hashedPlayerPassword = await bcrypt.hash('testpass123', env.BCRYPT_SALT_ROUNDS);
+    const player = await prisma.player.create({
+      data: {
+        email: 'testplayer@example.com',
+        password: hashedPlayerPassword,
+        name: '테스트 선수',
+        phone: '0123456789',
+        birthYear: 1990,
+        gender: 'male',
+        province: 'Ho Chi Minh City',
+        district: 'District 1',
+        skillLevel: 'c_class',
+        eloRating: 1200,
+        isVerified: true,
+        verifyToken: null,
+        verifyTokenExpiry: null,
+      },
+    });
+
+    console.log('✅ 테스트 선수 계정 재생성 완료:', player.email);
+
+    res.json({
+      success: true,
+      message: '테스트 선수 계정이 성공적으로 재생성되었습니다.',
+      player: {
+        email: player.email,
+        name: player.name,
+        created: true,
+        bcryptVersion: 'bcrypt'
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ 테스트 선수 계정 재생성 실패:', error);
+    res.status(500).json({
+      success: false,
+      message: '테스트 선수 계정 재생성에 실패했습니다.',
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
 export default router;
