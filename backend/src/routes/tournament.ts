@@ -534,27 +534,48 @@ router.patch('/:id/status', authenticate, requireRole(['admin']), async (req: Au
       });
     }
 
-    // Validate status transitions
+    // Validate status transitions with flexible registration start date
     const now = new Date();
-    if (status === 'open' && now < tournament.registrationStart) {
-      return res.status(400).json({
-        success: false,
-        message: '등록 시작일 이전에는 대회를 공개할 수 없습니다.',
-        error: 'INVALID_STATUS_TRANSITION'
-      });
+    let updateData: any = { status };
+    
+    if (status === 'open') {
+      // 모집중으로 변경 시, registrationStart가 미래 날짜면 현재 시간으로 조정
+      if (tournament.registrationStart && now < tournament.registrationStart) {
+        console.log('📅 Registration start date is in future, adjusting to current time');
+        updateData.registrationStart = now;
+      }
+      
+      // registrationEnd가 과거이면 7일 후로 연장
+      if (tournament.registrationEnd && now > tournament.registrationEnd) {
+        console.log('📅 Registration end date is in past, extending by 7 days');
+        const extendedDate = new Date(now);
+        extendedDate.setDate(extendedDate.getDate() + 7);
+        updateData.registrationEnd = extendedDate;
+      }
     }
 
     const updatedTournament = await prisma.tournament.update({
       where: { id },
-      data: { status }
+      data: updateData
     });
+
+    // 상태 변경 결과 메시지 생성
+    let message = '대회 상태가 변경되었습니다.';
+    if (status === 'open' && updateData.registrationStart) {
+      message += ' 등록 시작일이 현재 시간으로 조정되었습니다.';
+    }
+    if (status === 'open' && updateData.registrationEnd) {
+      message += ' 등록 종료일이 7일 후로 연장되었습니다.';
+    }
 
     res.json({
       success: true,
-      message: '대회 상태가 변경되었습니다.',
+      message,
       data: { 
         id: updatedTournament.id,
-        status: updatedTournament.status 
+        status: updatedTournament.status,
+        registrationStart: updatedTournament.registrationStart,
+        registrationEnd: updatedTournament.registrationEnd
       }
     });
   } catch (error) {
