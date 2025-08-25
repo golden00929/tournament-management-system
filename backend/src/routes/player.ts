@@ -3,8 +3,25 @@ import { prisma } from '../config/database';
 import { authenticate, AuthRequest, requireRole } from '../middleware/auth';
 import { EloRatingService } from '../services/eloRatingService';
 import { stringify } from 'csv-stringify';
+import multer from 'multer';
+import csv from 'csv-parser';
 
 const router = express.Router();
+
+// Multer configuration for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'text/csv' || file.originalname.endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only CSV files are allowed'));
+    }
+  },
+});
 
 // Get all players with pagination and filtering
 router.get('/', authenticate, async (req: AuthRequest, res) => {
@@ -493,6 +510,169 @@ router.delete('/:id', authenticate, requireRole(['admin']), async (req: AuthRequ
       success: false,
       message: '선수 삭제 중 오류가 발생했습니다.',
       error: 'DELETE_PLAYER_ERROR'
+    });
+  }
+});
+
+// Import players from CSV
+router.post('/import/csv', authenticate, requireRole(['admin']), upload.single('csvFile'), async (req: AuthRequest, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'CSV 파일이 업로드되지 않았습니다.',
+        error: 'NO_FILE_UPLOADED'
+      });
+    }
+
+    const results: any[] = [];
+    const errors: string[] = [];
+    let validCount = 0;
+    let duplicateCount = 0;
+    let errorCount = 0;
+
+    // Parse CSV data
+    const csvData = req.file.buffer.toString('utf8');
+    
+    return new Promise((resolve, reject) => {
+      const stream = csv({
+        // Handle CSV with or without BOM
+        skipEmptyLines: true,
+        headers: ['name', 'email', 'phone', 'birthYear', 'gender', 'province', 'district', 'eloRating', 'skillLevel']
+      });
+
+      stream.on('data', (data) => {
+        results.push(data);
+      });
+
+      stream.on('end', async () => {
+        try {
+          // Skip header row if exists
+          const dataRows = results.slice(1);
+          
+          for (let i = 0; i < dataRows.length; i++) {
+            const row = dataRows[i];
+            const lineNumber = i + 2; // Account for header and 0-based index
+
+            try {
+              // Validate required fields
+              if (!row.name || !row.email) {
+                errors.push(`줄 ${lineNumber}: 이름과 이메일은 필수입니다.`);
+                errorCount++;
+                continue;
+              }
+
+              // Email validation
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(row.email)) {
+                errors.push(`줄 ${lineNumber}: 올바르지 않은 이메일 형식입니다.`);
+                errorCount++;
+                continue;
+              }
+
+              // Check for duplicate email
+              const existingPlayer = await prisma.player.findUnique({
+                where: { email: row.email }
+              });
+
+              if (existingPlayer) {
+                errors.push(`줄 ${lineNumber}: 이메일 ${row.email}는 이미 등록된 선수입니다.`);
+                duplicateCount++;
+                continue;
+              }
+
+              // Parse and validate data
+              const birthYear = row.birthYear ? parseInt(row.birthYear) : new Date().getFullYear() - 25;
+              const eloRating = row.eloRating ? parseInt(row.eloRating) : 1200;
+              
+              // Gender validation
+              let gender = 'male';
+              if (row.gender) {
+                const genderLower = row.gender.toLowerCase();
+                if (genderLower.includes('여') || genderLower.includes('female') || genderLower.includes('f')) {
+                  gender = 'female';
+                }
+              }
+
+              // Skill level mapping
+              let skillLevel = 'beginner';
+              if (row.skillLevel) {
+                const skillLower = row.skillLevel.toLowerCase();
+                if (skillLower.includes('intermediate') || skillLower.includes('중급') || skillLower.includes('c')) {
+                  skillLevel = 'intermediate';
+                } else if (skillLower.includes('advanced') || skillLower.includes('고급') || skillLower.includes('b')) {
+                  skillLevel = 'advanced';
+                } else if (skillLower.includes('expert') || skillLower.includes('전문') || skillLower.includes('a')) {
+                  skillLevel = 'expert';
+                }
+              }
+
+              // Create player
+              await prisma.player.create({
+                data: {
+                  name: row.name.trim(),
+                  email: row.email.trim().toLowerCase(),
+                  phone: row.phone || '',
+                  birthYear,
+                  gender,
+                  province: row.province || '',
+                  district: row.district || '',
+                  eloRating,
+                  skillLevel,
+                  isActive: true,
+                  registrationDate: new Date(),
+                }
+              });
+
+              validCount++;
+            } catch (error) {
+              console.error(`Error processing row ${lineNumber}:`, error);
+              errors.push(`줄 ${lineNumber}: 데이터 처리 중 오류가 발생했습니다.`);
+              errorCount++;
+            }
+          }
+
+          res.json({
+            success: true,
+            message: `CSV 가져오기가 완료되었습니다. 성공: ${validCount}명, 중복: ${duplicateCount}명, 오류: ${errorCount}개`,
+            data: {
+              totalRows: dataRows.length,
+              validCount,
+              duplicateCount,
+              errorCount,
+              errors: errors.slice(0, 50) // Limit error messages to first 50
+            }
+          });
+        } catch (error) {
+          console.error('CSV import error:', error);
+          res.status(500).json({
+            success: false,
+            message: 'CSV 파일 처리 중 오류가 발생했습니다.',
+            error: 'CSV_PROCESSING_ERROR'
+          });
+        }
+      });
+
+      stream.on('error', (error) => {
+        console.error('CSV parsing error:', error);
+        res.status(400).json({
+          success: false,
+          message: 'CSV 파일 형식이 올바르지 않습니다.',
+          error: 'CSV_PARSING_ERROR'
+        });
+      });
+
+      // Parse the CSV
+      stream.write(csvData);
+      stream.end();
+    });
+
+  } catch (error) {
+    console.error('Import players error:', error);
+    res.status(500).json({
+      success: false,
+      message: '선수 목록 가져오기 중 오류가 발생했습니다.',
+      error: 'IMPORT_PLAYERS_ERROR'
     });
   }
 });
