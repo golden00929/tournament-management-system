@@ -1,9 +1,10 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
+import miiracerTheme from './theme/theme';
 import './i18n/i18n'; // i18n 설정 초기화
 
 // Core components (not lazy loaded)
@@ -22,29 +23,13 @@ const WebSocketTest = lazy(() => import('./pages/WebSocketTest'));
 // Player components
 const Player = lazy(() => import('./pages/Player/Player'));
 
-// Theme configuration
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-  typography: {
-    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-  },
-});
+// Miiracer theme imported from theme.ts
 
 
 function App() {
   return (
     <Provider store={store}>
-      <ThemeProvider theme={theme}>
+      <ThemeProvider theme={miiracerTheme}>
         <CssBaseline />
         <Router>
           <Routes>

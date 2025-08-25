@@ -22,9 +22,10 @@ import {
   LocationOn,
   People,
   Delete as DeleteIcon,
+  ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useGetTournamentsQuery, useDeleteTournamentMutation, useUpdateTournamentStatusMutation } from '../../store/api/apiSlice';
+import { useGetTournamentsQuery, useDeleteTournamentMutation, useUpdateTournamentStatusMutation, useCopyTournamentMutation } from '../../store/api/apiSlice';
 import { formatDate, formatCurrency } from '../../utils/dateUtils';
 import { getValidUser } from '../../utils/localStorage';
 
@@ -55,6 +56,7 @@ const TournamentList: React.FC = () => {
   const { data, isLoading, error } = useGetTournamentsQuery({});
   const [deleteTournament, { isLoading: isDeleting }] = useDeleteTournamentMutation();
   const [updateTournamentStatus] = useUpdateTournamentStatusMutation();
+  const [copyTournament, { isLoading: isCopying }] = useCopyTournamentMutation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedTournament, setSelectedTournament] = React.useState<string | null>(null);
   const [deleteDialog, setDeleteDialog] = React.useState(false);
@@ -145,6 +147,30 @@ const TournamentList: React.FC = () => {
       
       // 사용자에게 에러 알림
       alert(`상태 변경 실패: ${err?.data?.message || err?.message || '알 수 없는 오류가 발생했습니다.'}`);
+    }
+  };
+
+  const handleCopyTournament = async () => {
+    if (!selectedTournament) return;
+
+    try {
+      const result = await copyTournament({ id: selectedTournament }).unwrap();
+      console.log('✅ Tournament copied successfully:', result);
+      setAnchorEl(null);
+      setSelectedTournament(null);
+      
+      // 성공 알림
+      alert(`대회가 성공적으로 복사되었습니다: ${result.data.name}`);
+    } catch (err: any) {
+      console.error('❌ Copy tournament error:', {
+        error: err,
+        message: err?.data?.message || err?.message,
+        status: err?.status,
+        tournamentId: selectedTournament
+      });
+      
+      // 사용자에게 에러 알림
+      alert(`대회 복사 실패: ${err?.data?.message || err?.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
   };
 
@@ -251,6 +277,13 @@ const TournamentList: React.FC = () => {
           handleMenuClose();
         }}>
           수정
+        </MenuItem>
+        <MenuItem 
+          onClick={handleCopyTournament}
+          disabled={isCopying}
+        >
+          <CopyIcon sx={{ mr: 1, fontSize: 16 }} />
+          {isCopying ? '복사 중...' : '복사'}
         </MenuItem>
         <MenuItem onClick={() => handleStatusChange('draft')}>
           📝 작성 중으로 변경

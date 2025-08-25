@@ -1062,54 +1062,6 @@ const en = {
   }
 };
 
-// Korean translations
-const ko = {
-  "common": {
-    "loading": "로딩 중...",
-    "customBracketDescription": "Tạo bảng đấu theo ý muốn với các thiết lập linh hoạt",
-    "bracketSettings": "Cài đặt bảng đấu",
-    "configureBasicSettings": "Cấu hình các thiết lập cơ bản",
-    "groupStage": "Vòng bảng",
-    "manageGroupMatches": "Quản lý các trận đấu vòng bảng",
-    "knockoutStage": "Vòng loại trực tiếp", 
-    "finalTournament": "Giải đấu cuối cùng",
-    "tournamentType": "Loại giải đấu",
-    "groupsOnly": "Chỉ vòng bảng",
-    "knockoutOnly": "Chỉ loại trực tiếp",
-    "groupsKnockout": "Vòng bảng + Loại trực tiếp",
-    "swissSystem": "Hệ thống Swiss",
-    "seedingMethod": "Phương thức xếp hạt giống",
-    "rating": "điểm",
-    "manual": "Thủ công",
-    "random": "Ngẫu nhiên",
-    "groupCount": "Số bảng",
-    "playersPerGroup": "Số cầu thủ mỗi bảng",
-    "advancingPerGroup": "Số cầu thủ lên tiếp",
-    "roundRobinInGroups": "Đấu vòng tròn trong bảng",
-    "enableThirdPlace": "Cho phép tranh hạng 3",
-    "participantCount": "Số lượng tham gia: {{count}} cầu thủ",
-    "generateBracket": "Tạo bảng đấu",
-    "groupMatches": "Trận đấu bảng",
-    "generateKnockout": "Tạo vòng loại trực tiếp",
-    "knockoutBracket": "Bảng đấu loại trực tiếp",
-    "final": "Chung kết",
-    "semifinal": "Bán kết", 
-    "quarterfinal": "Tứ kết",
-    "round": "Vòng",
-    "scheduled": "Đã lên lịch",
-    "ongoing": "Đang diễn ra",
-    "completed": "Hoàn thành",
-    "cancelled": "Đã hủy",
-    "enterScore": "Nhập điểm số",
-    "group": "Bảng"
-  },
-  "language": {
-    "vietnamese": "Tiếng Việt",
-    "korean": "한국어",
-    "english": "English",
-    "selectLanguage": "Select Language"
-  }
-};
 
 const resources = {
   vi: {

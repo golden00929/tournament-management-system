@@ -331,11 +331,11 @@ const PlayerDashboard: React.FC = () => {
                 </Box>
               </Stack>
               
-              {profile?.totalMatches > 0 && (
+              {profile?.totalMatches && profile.totalMatches > 0 && (
                 <Box sx={{ mt: 2 }}>
                   <LinearProgress
                     variant="determinate"
-                    value={(profile.wins / profile.totalMatches) * 100}
+                    value={(profile.wins || 0) / profile.totalMatches * 100}
                     sx={{ 
                       height: 6,
                       borderRadius: 3,

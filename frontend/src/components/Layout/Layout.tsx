@@ -14,6 +14,7 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import miiracerLogo from '../../assets/miiracer-logo.jpg';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
@@ -63,8 +64,17 @@ const Layout: React.FC = () => {
 
   const drawer = (
     <div>
-      <Toolbar>
-        {/* 사이드바 제목 제거 */}
+      <Toolbar sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', py: 2 }}>
+        <Box
+          component="img"
+          src={miiracerLogo}
+          alt="Miiracer Logo"
+          sx={{
+            height: 40,
+            width: 'auto',
+            objectFit: 'contain',
+          }}
+        />
       </Toolbar>
       <List>
         {menuItems.map((item) => (
@@ -109,9 +119,22 @@ const Layout: React.FC = () => {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            동호인 대회 관리 시스템
-          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Box
+              component="img"
+              src={miiracerLogo}
+              alt="Miiracer Logo"
+              sx={{
+                height: 32,
+                width: 'auto',
+                objectFit: 'contain',
+                display: { xs: 'block', sm: 'none' },
+              }}
+            />
+            <Typography variant="h6" noWrap component="div" sx={{ fontWeight: 600 }}>
+              Miiracer 대회 관리 시스템
+            </Typography>
+          </Box>
         </Toolbar>
       </AppBar>
       <Box

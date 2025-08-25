@@ -86,7 +86,7 @@ const baseQueryWithErrorHandling = async (args: any, api: any, extraOptions: any
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithErrorHandling,
-  tagTypes: ['Tournament', 'Player', 'Participant', 'Bracket', 'Match', 'PlayerProfile', 'PublicTournaments', 'PublicTournament', 'AvailableTournaments', 'PlayerApplications', 'PublicRankings', 'Notification', 'PlayerMatches', 'TournamentBracket'],
+  tagTypes: ['Tournament', 'Player', 'Participant', 'Bracket', 'Match', 'PlayerProfile', 'PublicTournaments', 'PublicTournament', 'AvailableTournaments', 'PlayerApplications', 'PublicRankings', 'Notification', 'PlayerMatches', 'TournamentBracket', 'DashboardStats'],
   endpoints: (builder) => ({}),
 });
 
@@ -151,6 +151,14 @@ export const tournamentApi = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['Tournament'],
     }),
+    copyTournament: builder.mutation<any, { id: string; name?: string }>({
+      query: ({ id, name }) => ({
+        url: `/tournaments/${id}/copy`,
+        method: 'POST',
+        body: name ? { name } : {},
+      }),
+      invalidatesTags: ['Tournament'],
+    }),
   }),
 });
 
@@ -190,6 +198,13 @@ export const playerApi = apiSlice.injectEndpoints({
         method: 'DELETE',
       }),
       invalidatesTags: ['Player'],
+    }),
+    exportPlayers: builder.query<any, { search?: string; skillLevel?: string; province?: string; minRating?: number; maxRating?: number }>({
+      query: (params) => ({
+        url: '/players/export/csv',
+        params,
+        responseHandler: (response: Response) => response.blob(),
+      }),
     }),
     adjustPlayerRating: builder.mutation<any, { id: string; newRating: number; reason?: string }>({
       query: ({ id, newRating, reason = 'manual_adjustment' }) => ({
@@ -391,6 +406,20 @@ export const notificationApi = apiSlice.injectEndpoints({
   }),
 });
 
+// Dashboard API
+export const dashboardApi = apiSlice.injectEndpoints({
+  endpoints: (builder) => ({
+    getDashboardStats: builder.query<any, void>({
+      query: () => '/dashboard/stats',
+      providesTags: ['DashboardStats'],
+    }),
+    getTournamentStats: builder.query<any, void>({
+      query: () => '/dashboard/tournament-stats',
+      providesTags: ['DashboardStats'],
+    }),
+  }),
+});
+
 // Export hooks for usage in functional components
 export const { useLoginMutation } = authApi;
 export const { 
@@ -399,7 +428,8 @@ export const {
   useCreateTournamentMutation,
   useUpdateTournamentMutation,
   useDeleteTournamentMutation,
-  useUpdateTournamentStatusMutation 
+  useUpdateTournamentStatusMutation,
+  useCopyTournamentMutation
 } = tournamentApi;
 export const { 
   useGetPlayersQuery, 
@@ -407,6 +437,7 @@ export const {
   useCreatePlayerMutation,
   useUpdatePlayerMutation,
   useDeletePlayerMutation,
+  useExportPlayersQuery,
   useAdjustPlayerRatingMutation
 } = playerApi;
 export const {
@@ -437,3 +468,7 @@ export const {
   useSendMatchStartingNotificationMutation,
   useGetNotificationStatsQuery
 } = notificationApi;
+export const {
+  useGetDashboardStatsQuery,
+  useGetTournamentStatsQuery
+} = dashboardApi;

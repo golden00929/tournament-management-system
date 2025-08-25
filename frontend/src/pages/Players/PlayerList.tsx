@@ -29,6 +29,7 @@ import {
   InputLabel,
   Select,
   TablePagination,
+  Checkbox,
 } from '@mui/material';
 import { 
   Add as AddIcon, 
@@ -39,6 +40,7 @@ import {
   Delete,
   Visibility,
   Settings,
+  FileDownload,
 } from '@mui/icons-material';
 import { useGetPlayersQuery, useDeletePlayerMutation, useAdjustPlayerRatingMutation } from '../../store/api/apiSlice';
 
@@ -82,10 +84,75 @@ const PlayerList: React.FC = () => {
   const [selectedPlayerData, setSelectedPlayerData] = useState<any>(null);
   const [newRating, setNewRating] = useState<string>('');
   const [reason, setReason] = useState('manual_adjustment');
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
 
   const { data, isLoading, error } = useGetPlayersQuery({ limit: 500 });
   const [deletePlayer, { isLoading: isDeleting }] = useDeletePlayerMutation();
   const [adjustPlayerRating, { isLoading: isAdjusting }] = useAdjustPlayerRatingMutation();
+  
+  // CSV export function
+  const handleExportCSV = async () => {
+    try {
+      const params = {
+        ...(search && { search }),
+        ...(skillLevelFilter && { skillLevel: skillLevelFilter })
+      };
+      
+      const baseUrl = process.env.REACT_APP_API_URL || 
+                       (process.env.NODE_ENV === 'production' 
+                         ? 'https://tournament-management-system-production.up.railway.app/api'
+                         : 'http://localhost:5000/api');
+      
+      const token = localStorage.getItem('token');
+      const queryString = new URLSearchParams(params).toString();
+      const url = `${baseUrl}/players/export/csv${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to export');
+      }
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      
+      const timestamp = new Date().toISOString().slice(0, 10);
+      link.download = `players_${timestamp}.csv`;
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert('CSV 내보내기에 실패했습니다.');
+    }
+  };
+
+  // Multi-select handlers
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      const allPlayerIds = players.map((player: any) => player.id);
+      setSelectedPlayers(allPlayerIds);
+    } else {
+      setSelectedPlayers([]);
+    }
+  };
+
+  const handleSelectPlayer = (playerId: string) => {
+    setSelectedPlayers(prev => 
+      prev.includes(playerId) 
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, playerId: string) => {
     setAnchorEl(event.currentTarget);
@@ -191,6 +258,9 @@ const PlayerList: React.FC = () => {
   const endIndex = startIndex + rowsPerPage;
   const players = filteredPlayers.slice(startIndex, endIndex);
   
+  const isAllSelected = players.length > 0 && selectedPlayers.length === players.length;
+  const isIndeterminate = selectedPlayers.length > 0 && selectedPlayers.length < players.length;
+  
   const handleChangePage = (event: unknown, newPage: number) => {
     setPage(newPage);
   };
@@ -203,14 +273,45 @@ const PlayerList: React.FC = () => {
   return (
     <Box>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4">선수 관리</Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/players/create')}
-        >
-          선수 등록
-        </Button>
+        <Box>
+          <Typography variant="h4">선수 관리</Typography>
+          {selectedPlayers.length > 0 && (
+            <Typography variant="body2" color="primary" sx={{ mt: 1 }}>
+              {selectedPlayers.length}명 선택됨
+            </Typography>
+          )}
+        </Box>
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {selectedPlayers.length > 0 && (
+            <Button 
+              variant="outlined" 
+              color="error"
+              onClick={() => {
+                if (window.confirm(`선택한 ${selectedPlayers.length}명의 선수를 삭제하시겠습니까?`)) {
+                  // TODO: Implement bulk delete
+                  console.log('Bulk delete:', selectedPlayers);
+                  setSelectedPlayers([]);
+                }
+              }}
+            >
+              선택 삭제
+            </Button>
+          )}
+          <Button 
+            variant="outlined" 
+            startIcon={<FileDownload />}
+            onClick={handleExportCSV}
+          >
+            CSV 내보내기
+          </Button>
+          <Button 
+            variant="contained" 
+            startIcon={<AddIcon />}
+            onClick={() => navigate('/players/create')}
+          >
+            선수 등록
+          </Button>
+        </Box>
       </Box>
 
       {/* 검색 및 필터 */}
@@ -278,6 +379,14 @@ const PlayerList: React.FC = () => {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell padding="checkbox">
+                <Checkbox
+                  indeterminate={isIndeterminate}
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  disabled={players.length === 0}
+                />
+              </TableCell>
               <TableCell>선수</TableCell>
               <TableCell>연락처</TableCell>
               <TableCell align="center">ELO 레이팅</TableCell>
@@ -291,7 +400,7 @@ const PlayerList: React.FC = () => {
           <TableBody>
             {players.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center" sx={{ py: 4 }}>
+                <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
                   <Typography variant="body2" color="text.secondary">
                     {search || skillLevelFilter ? '조건에 맞는 선수가 없습니다.' : '등록된 선수가 없습니다.'}
                   </Typography>
@@ -300,6 +409,12 @@ const PlayerList: React.FC = () => {
             ) : (
               players.map((player: any) => (
                 <TableRow key={player.id} hover>
+                  <TableCell padding="checkbox">
+                    <Checkbox
+                      checked={selectedPlayers.includes(player.id)}
+                      onChange={() => handleSelectPlayer(player.id)}
+                    />
+                  </TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <Avatar>

@@ -5,6 +5,8 @@ import {
   CardContent,
   Typography,
   Paper,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   EmojiEvents,
@@ -13,20 +15,7 @@ import {
   TrendingUp,
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-// Mock data for demonstration
-const mockData = {
-  totalTournaments: 5,
-  totalPlayers: 120,
-  activeMatches: 8,
-  avgRating: 1650,
-  monthlyTournaments: [
-    { month: '8월', count: 2 },
-    { month: '9월', count: 3 },
-    { month: '10월', count: 4 },
-    { month: '11월', count: 1 },
-  ]
-};
+import { useGetDashboardStatsQuery } from '../../store/api/apiSlice';
 
 interface StatCardProps {
   title: string;
@@ -66,13 +55,56 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, color }) => (
 );
 
 const Dashboard: React.FC = () => {
+  const { 
+    data: dashboardStats, 
+    isLoading, 
+    error, 
+    refetch 
+  } = useGetDashboardStatsQuery();
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ mb: 4 }}>
+        <Alert 
+          severity="error" 
+          action={
+            <Box sx={{ mt: 1 }}>
+              <Typography 
+                variant="button" 
+                sx={{ cursor: 'pointer', textDecoration: 'underline' }}
+                onClick={() => refetch()}
+              >
+                다시 시도
+              </Typography>
+            </Box>
+          }
+        >
+          대시보드 데이터를 불러올 수 없습니다. 
+          {error && typeof error === 'object' && 'data' in error 
+            ? ` (${(error as any).data?.message || '알 수 없는 오류'})` 
+            : ''}
+        </Alert>
+      </Box>
+    );
+  }
+
+  const stats = dashboardStats?.data || {};
+  
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
         대시보드
       </Typography>
       <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 4 }}>
-        대회 관리 현황을 한눈에 확인하세요
+        대회 관리 현황을 한눈에 확인하세요 (실시간 데이터)
       </Typography>
 
       {/* Stats Cards */}
@@ -84,25 +116,25 @@ const Dashboard: React.FC = () => {
       }}>
         <StatCard
           title="총 대회 수"
-          value={mockData.totalTournaments}
+          value={stats.totalTournaments || 0}
           icon={<EmojiEvents />}
           color="#1976d2"
         />
         <StatCard
           title="등록 선수 수"
-          value={mockData.totalPlayers}
+          value={stats.totalPlayers || 0}
           icon={<People />}
           color="#2e7d32"
         />
         <StatCard
           title="진행 중인 경기"
-          value={mockData.activeMatches}
+          value={stats.activeMatches || 0}
           icon={<SportsTennis />}
           color="#ed6c02"
         />
         <StatCard
           title="평균 레이팅"
-          value={mockData.avgRating}
+          value={stats.avgRating || 1500}
           icon={<TrendingUp />}
           color="#9c27b0"
         />
@@ -116,17 +148,25 @@ const Dashboard: React.FC = () => {
       }}>
         <Paper sx={{ p: 3 }}>
           <Typography variant="h6" gutterBottom>
-            월별 대회 개최 현황
+            월별 대회 개최 현황 (최근 12개월)
           </Typography>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={mockData.monthlyTournaments}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="count" fill="#1976d2" />
-            </BarChart>
-          </ResponsiveContainer>
+          {stats.monthlyTournaments && stats.monthlyTournaments.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.monthlyTournaments}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#1976d2" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Typography color="text.secondary">
+                월별 대회 데이터가 없습니다
+              </Typography>
+            </Box>
+          )}
         </Paper>
 
         <Paper sx={{ p: 3, height: 'fit-content' }}>
@@ -134,18 +174,17 @@ const Dashboard: React.FC = () => {
             최근 활동
           </Typography>
           <Box sx={{ mt: 2 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              • 새로운 선수 3명 등록
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              • "즉시 테스트 대회" 진행 중
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              • 김철수 선수 레이팅 1814점으로 상승
-            </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              • 대진표 1개 생성 완료
-            </Typography>
+            {stats.recentActivities && stats.recentActivities.length > 0 ? (
+              stats.recentActivities.map((activity: string, index: number) => (
+                <Typography key={index} variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                  • {activity}
+                </Typography>
+              ))
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                최근 활동 내역이 없습니다
+              </Typography>
+            )}
           </Box>
         </Paper>
       </Box>

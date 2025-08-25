@@ -1011,4 +1011,105 @@ router.post('/:id/bracket/generate', authenticate, requireRole(['admin']), async
   }
 });
 
+// Copy tournament
+router.post('/:id/copy', authenticate, requireRole(['admin']), async (req: AuthRequest, res) => {
+  try {
+    const { id } = req.params;
+    const { name: newName } = req.body;
+
+    // Find the original tournament
+    const originalTournament = await prisma.tournament.findUnique({
+      where: { id },
+      select: {
+        name: true,
+        description: true,
+        category: true,
+        location: true,
+        locationLat: true,
+        locationLng: true,
+        venue: true,
+        maxParticipants: true,
+        minSkillLevel: true,
+        maxSkillLevel: true,
+        skillDiffLimit: true,
+        tournamentType: true,
+        skillLevel: true,
+        participantFee: true,
+        organizerFee: true,
+        pricingTier: true,
+        contactPhone: true,
+        contactEmail: true,
+        bankInfo: true,
+        organizerInfo: true
+      }
+    });
+
+    if (!originalTournament) {
+      return res.status(404).json({
+        success: false,
+        message: '복사할 대회를 찾을 수 없습니다.',
+        error: 'TOURNAMENT_NOT_FOUND'
+      });
+    }
+
+    // Set default dates (7 days from now for registration, 30 days for tournament)
+    const now = new Date();
+    const registrationStart = new Date(now);
+    registrationStart.setDate(registrationStart.getDate() + 7);
+    
+    const registrationEnd = new Date(registrationStart);
+    registrationEnd.setDate(registrationEnd.getDate() + 14);
+    
+    const startDate = new Date(registrationEnd);
+    startDate.setDate(startDate.getDate() + 7);
+    
+    const endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 2);
+
+    // Create new tournament with copied data
+    const copiedTournament = await prisma.tournament.create({
+      data: {
+        name: newName || `${originalTournament.name} (복사본)`,
+        description: originalTournament.description,
+        category: originalTournament.category,
+        startDate,
+        endDate,
+        registrationStart,
+        registrationEnd,
+        location: originalTournament.location,
+        locationLat: originalTournament.locationLat,
+        locationLng: originalTournament.locationLng,
+        venue: originalTournament.venue,
+        maxParticipants: originalTournament.maxParticipants,
+        minSkillLevel: originalTournament.minSkillLevel,
+        maxSkillLevel: originalTournament.maxSkillLevel,
+        skillDiffLimit: originalTournament.skillDiffLimit,
+        tournamentType: originalTournament.tournamentType,
+        skillLevel: originalTournament.skillLevel,
+        participantFee: originalTournament.participantFee,
+        organizerFee: originalTournament.organizerFee,
+        pricingTier: originalTournament.pricingTier,
+        contactPhone: originalTournament.contactPhone,
+        contactEmail: originalTournament.contactEmail,
+        bankInfo: originalTournament.bankInfo,
+        organizerInfo: originalTournament.organizerInfo,
+        status: 'draft'
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      message: '대회가 성공적으로 복사되었습니다.',
+      data: copiedTournament
+    });
+  } catch (error) {
+    console.error('Copy tournament error:', error);
+    res.status(500).json({
+      success: false,
+      message: '대회 복사 중 오류가 발생했습니다.',
+      error: 'COPY_TOURNAMENT_ERROR'
+    });
+  }
+});
+
 export default router;

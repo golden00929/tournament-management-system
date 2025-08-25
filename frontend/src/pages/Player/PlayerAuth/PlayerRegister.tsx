@@ -505,14 +505,6 @@ const PlayerRegister: React.FC = () => {
                   error={!!validationErrors.gender}
                   helperText={validationErrors.gender}
                   sx={{ ...textFieldStyle, maxWidth: { sm: '50%' } }}
-                  MenuProps={{
-                    PaperProps: {
-                      sx: {
-                        bgcolor: darkTheme.background.secondary,
-                        border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
-                      },
-                    },
-                  }}
                 >
                   <MenuItem value="male" sx={{ color: darkTheme.text.primary }}>{t('player.register.male')}</MenuItem>
                   <MenuItem value="female" sx={{ color: darkTheme.text.primary }}>{t('player.register.female')}</MenuItem>
@@ -540,14 +532,6 @@ const PlayerRegister: React.FC = () => {
                       ),
                     }}
                     sx={textFieldStyle}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          bgcolor: darkTheme.background.secondary,
-                          border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
-                        },
-                      },
-                    }}
                   >
                     {vietnamProvinces.map((province) => (
                       <MenuItem key={province.value} value={province.value} sx={{ color: darkTheme.text.primary }}>
@@ -567,14 +551,6 @@ const PlayerRegister: React.FC = () => {
                       helperText={validationErrors.district}
                       disabled={!formData.province}
                       sx={textFieldStyle}
-                      MenuProps={{
-                        PaperProps: {
-                          sx: {
-                            bgcolor: darkTheme.background.secondary,
-                            border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
-                          },
-                        },
-                      }}
                     >
                       {formData.province === 'ho-chi-minh' 
                         ? hoChiMinhDistricts.map((district) => (

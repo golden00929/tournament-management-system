@@ -38,7 +38,7 @@ import BracketVisualization from '../../components/Tournament/BracketVisualizati
 import SingleEliminationBracket from '../../components/Tournament/SingleEliminationBracket';
 import RoundRobinBracket from '../../components/Tournament/RoundRobinBracket';
 import BracketConfiguration from '../../components/Tournament/BracketConfiguration';
-import CustomTournamentBracket from '../../components/Tournament/CustomTournamentBracket';
+import InteractiveTournamentBracket from '../../components/Tournament/InteractiveTournamentBracket';
 
 interface MatchResult {
   matchId: string;
@@ -459,22 +459,14 @@ const TournamentBracket: React.FC = () => {
       )}
 
       {activeTab === 1 && (
-        <CustomTournamentBracket
+        <InteractiveTournamentBracket
           participants={participantsData?.data?.participants?.map((p: any) => ({
             id: p.player?.id || p.id,
             name: p.player?.name || p.name,
-            eloRating: p.player?.eloRating || 1200,
-            skillLevel: p.player?.skillLevel || 'beginner',
-            province: p.player?.province,
-            district: p.player?.district,
           })) || []}
-          onBracketGenerated={(bracketData) => {
-            console.log('커스텀 대진표 생성됨:', bracketData);
-            // 여기서 백엔드 API 호출하여 대진표 저장
-            refetchBracket();
+          onBracketUpdate={(bracketData) => {
+            console.log('Interactive bracket updated:', bracketData);
           }}
-          onMatchUpdate={handleMatchClick}
-          isLoading={isGenerating}
         />
       )}
 

@@ -2,6 +2,7 @@ import express from 'express';
 import { prisma } from '../config/database';
 import { authenticate, AuthRequest, requireRole } from '../middleware/auth';
 import { EloRatingService } from '../services/eloRatingService';
+import { stringify } from 'csv-stringify';
 
 const router = express.Router();
 
@@ -492,6 +493,143 @@ router.delete('/:id', authenticate, requireRole(['admin']), async (req: AuthRequ
       success: false,
       message: '선수 삭제 중 오류가 발생했습니다.',
       error: 'DELETE_PLAYER_ERROR'
+    });
+  }
+});
+
+// Export players to CSV
+router.get('/export/csv', authenticate, requireRole(['admin']), async (req: AuthRequest, res) => {
+  try {
+    const {
+      search = '',
+      skillLevel,
+      province,
+      minRating,
+      maxRating,
+      format = 'csv'
+    } = req.query;
+
+    // Build where clause (same as regular get)
+    const where: any = {
+      isActive: true,
+    };
+
+    if (search) {
+      where.OR = [
+        { name: { contains: search as string, mode: 'insensitive' } },
+        { email: { contains: search as string, mode: 'insensitive' } }
+      ];
+    }
+
+    if (skillLevel) {
+      where.skillLevel = skillLevel;
+    }
+
+    if (province) {
+      where.province = province;
+    }
+
+    if (minRating || maxRating) {
+      where.eloRating = {};
+      if (minRating) where.eloRating.gte = parseInt(minRating as string);
+      if (maxRating) where.eloRating.lte = parseInt(maxRating as string);
+    }
+
+    // Get all players without pagination for export
+    const players = await prisma.player.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        birthYear: true,
+        gender: true,
+        province: true,
+        district: true,
+        address: true,
+        emergencyContact: true,
+        emergencyPhone: true,
+        eloRating: true,
+        skillLevel: true,
+        totalMatches: true,
+        wins: true,
+        losses: true,
+        registrationDate: true,
+        createdAt: true
+      },
+      orderBy: { eloRating: 'desc' }
+    });
+
+    // Prepare CSV data
+    const csvHeaders = [
+      '선수ID',
+      '이름', 
+      '이메일',
+      '전화번호',
+      '출생년도',
+      '성별',
+      '지역',
+      '구/군',
+      '주소',
+      '비상연락처',
+      '비상연락처 전화',
+      'ELO 레이팅',
+      '실력등급',
+      '총 경기수',
+      '승수',
+      '패수',
+      '승률(%)',
+      '등록일자',
+      '생성일시'
+    ];
+
+    const csvData = players.map(player => [
+      player.id,
+      player.name,
+      player.email,
+      player.phone || '',
+      player.birthYear || '',
+      player.gender || '',
+      player.province || '',
+      player.district || '',
+      player.address || '',
+      player.emergencyContact || '',
+      player.emergencyPhone || '',
+      player.eloRating || 1200,
+      player.skillLevel || '',
+      player.totalMatches || 0,
+      player.wins || 0,
+      player.losses || 0,
+      player.totalMatches > 0 ? Math.round((player.wins || 0) / player.totalMatches * 100) : 0,
+      player.registrationDate ? new Date(player.registrationDate).toLocaleDateString('ko-KR') : '',
+      new Date(player.createdAt).toLocaleDateString('ko-KR')
+    ]);
+
+    // Generate CSV
+    stringify([csvHeaders, ...csvData], (err, output) => {
+      if (err) {
+        throw err;
+      }
+
+      // Set headers for file download
+      const timestamp = new Date().toISOString().slice(0, 10);
+      const filename = `players_${timestamp}.csv`;
+      
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      
+      // Add BOM for proper Korean character display in Excel
+      res.write('\uFEFF');
+      res.end(output);
+    });
+
+  } catch (error) {
+    console.error('Export players error:', error);
+    res.status(500).json({
+      success: false,
+      message: '선수 목록 내보내기 중 오류가 발생했습니다.',
+      error: 'EXPORT_PLAYERS_ERROR'
     });
   }
 });
