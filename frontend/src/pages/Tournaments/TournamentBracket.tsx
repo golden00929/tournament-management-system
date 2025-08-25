@@ -25,7 +25,6 @@ import {
   Settings,
   Build,
   Visibility,
-  Edit,
 } from '@mui/icons-material';
 import {
   useGetTournamentQuery,
@@ -382,11 +381,6 @@ const TournamentBracket: React.FC = () => {
             label="커스텀 생성기" 
             iconPosition="start"
           />
-          <Tab 
-            icon={<Edit />} 
-            label="실시간 편집" 
-            iconPosition="start"
-          />
         </Tabs>
       </Card>
 
@@ -464,38 +458,13 @@ const TournamentBracket: React.FC = () => {
             id: p.player?.id || p.id,
             name: p.player?.name || p.name,
           })) || []}
+          tournamentName={tournament.name}
           onBracketUpdate={(bracketData) => {
             console.log('Interactive bracket updated:', bracketData);
           }}
         />
       )}
 
-      {activeTab === 2 && (
-        <Box sx={{ p: 3 }}>
-          <Alert severity="info" sx={{ mb: 3 }}>
-            <Typography variant="body1" gutterBottom>
-              🚧 실시간 편집 모드 (개발 중)
-            </Typography>
-            <Typography variant="body2">
-              이 모드에서는 경기 점수를 실시간으로 편집하고 즉시 반영할 수 있습니다.
-              곧 추가될 예정입니다.
-            </Typography>
-          </Alert>
-          
-          {/* 기존 대진표 표시하되, 편집 가능한 형태로 */}
-          {bracket && bracket.matches && bracket.matches.length > 0 ? (
-            <BracketVisualization
-              matches={bracket.matches}
-              tournamentType={tournament.tournamentType}
-              onMatchClick={handleMatchClick}
-            />
-          ) : (
-            <Typography variant="body2" color="text.secondary" align="center">
-              편집할 대진표가 없습니다. 먼저 대진표를 생성해주세요.
-            </Typography>
-          )}
-        </Box>
-      )}
 
       {/* 대진표 구성 다이얼로그 */}
       {configurationDialog && (

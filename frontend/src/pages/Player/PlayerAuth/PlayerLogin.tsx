@@ -25,6 +25,7 @@ import {
   VisibilityOff,
   Login as LoginIcon,
 } from '@mui/icons-material';
+import miiracerLogo from '../../../assets/miiracer-logo.jpg';
 import LanguageSelector from '../../../components/LanguageSelector/LanguageSelector';
 import { useDispatch } from 'react-redux';
 import { usePlayerLoginMutation } from '../../../store/api/playerApiSlice';
@@ -238,22 +239,17 @@ const PlayerLogin: React.FC = () => {
     );
   }
 
-  // 다크 테마 색상 정의
-  const darkTheme = {
+  // Miiracer 테마 색상 정의
+  const miiracerTheme = {
     background: {
-      primary: '#121212',
-      secondary: '#1e1e1e',
-      tertiary: '#2d2d2d',
+      primary: '#E31E1E',
+      secondary: '#B71C1C',
+      light: '#FF5555',
     },
     text: {
       primary: '#ffffff',
-      secondary: '#b0b0b0',
-      accent: '#e0e0e0',
-    },
-    accent: {
-      primary: '#bb86fc',
-      secondary: '#03dac6',
-      gold: '#ffd700',
+      secondary: '#f5f5f5',
+      accent: '#ffffff',
     },
   };
 
@@ -261,212 +257,114 @@ const PlayerLogin: React.FC = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
+        background: `linear-gradient(135deg, ${miiracerTheme.background.primary} 0%, ${miiracerTheme.background.secondary} 100%)`,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        py: 3,
+        py: 4,
       }}
     >
       <Container maxWidth="sm">
-        <Paper 
-          elevation={8} 
-          sx={{ 
-            width: '100%',
-            borderRadius: 3,
-            overflow: 'hidden',
-            background: darkTheme.background.secondary,
-            border: `1px solid ${alpha(darkTheme.text.secondary, 0.2)}`,
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
           }}
         >
-          {/* 헤더 */}
-          <Box
+          <Paper
+            elevation={0}
             sx={{
-              background: `linear-gradient(135deg, ${darkTheme.accent.primary} 0%, ${darkTheme.accent.secondary} 100%)`,
-              color: darkTheme.text.primary,
-              p: 4,
-              textAlign: 'center',
-              position: 'relative',
+              padding: 4,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              width: '100%',
+              borderRadius: 3,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+              backdropFilter: 'blur(10px)',
+              backgroundColor: 'rgba(255,255,255,0.95)',
             }}
           >
+            <Box
+              component="img"
+              src={miiracerLogo}
+              alt="Miiracer Logo"
+              sx={{
+                height: 60,
+                width: 'auto',
+                objectFit: 'contain',
+                mb: 3,
+              }}
+            />
+            <Typography component="h1" variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#2C2C2C' }}>
+              Miiracer 선수 로그인
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
+              {t('auth.loginSubtitle', { defaultValue: '대회에 참가하려면 로그인하세요' })}
+            </Typography>
+
             {/* 언어 선택기 */}
             <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-              <LanguageSelector darkMode={true} />
+              <LanguageSelector />
             </Box>
-            
-            <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'center',
-              alignItems: 'center',
-              mb: 1,
-              '& svg': { 
-                fontSize: 48,
-                filter: 'drop-shadow(0 0 10px rgba(255,255,255,0.3))'
-              }
-            }}>
-              🏸
-            </Box>
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ 
-              color: darkTheme.text.primary,
-              textShadow: '0 2px 10px rgba(0,0,0,0.3)'
-            }}>
-              {t('auth.loginTitle')}
-            </Typography>
-            <Typography variant="body1" sx={{ 
-              opacity: 0.95,
-              color: darkTheme.text.accent,
-              fontWeight: 500
-            }}>
-              {t('auth.loginSubtitle', { defaultValue: 'Login to participate in tournaments' })}
-            </Typography>
-          </Box>
 
-          <CardContent sx={{ 
-            p: 4, 
-            bgcolor: darkTheme.background.secondary,
-            color: darkTheme.text.primary 
-          }}>
             {/* 에러 메시지 */}
             {error && (
-              <Alert 
-                severity="error" 
-                sx={{ 
-                  mb: 3,
-                  bgcolor: alpha('#f44336', 0.1),
-                  color: '#ff6b6b',
-                  border: '1px solid rgba(244, 67, 54, 0.3)',
-                  '& .MuiAlert-icon': {
-                    color: '#ff6b6b'
-                  }
-                }}
-              >
+              <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
                 {getErrorMessage()}
               </Alert>
             )}
 
-            <form onSubmit={handleSubmit}>
-              <Box sx={{ mb: 3 }}>
-                <TextField
-                  fullWidth
-                  label={t('auth.email')}
-                  type="email"
-                  value={formData.email}
-                  onChange={handleInputChange('email')}
-                  error={!!validationErrors.email}
-                  helperText={validationErrors.email}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon sx={{ color: darkTheme.accent.primary }} />
-                      </InputAdornment>
-                    ),
-                  }}
-                  placeholder="example@email.com"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                      color: darkTheme.text.primary,
-                      '& fieldset': {
-                        borderColor: alpha(darkTheme.text.secondary, 0.3),
-                      },
-                      '&:hover fieldset': {
-                        borderColor: darkTheme.accent.primary,
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: darkTheme.accent.primary,
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: darkTheme.text.secondary,
-                      '&.Mui-focused': {
-                        color: darkTheme.accent.primary,
-                      },
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ff6b6b',
-                    },
-                  }}
-                />
-              </Box>
+            <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label={t('auth.email', { defaultValue: '이메일' })}
+                name="email"
+                autoComplete="email"
+                autoFocus
+                value={formData.email}
+                onChange={handleInputChange('email')}
+                error={!!validationErrors.email}
+                helperText={validationErrors.email}
+                disabled={isLoading}
+              />
 
-              <Box sx={{ mb: 4 }}>
-                <TextField
-                  fullWidth
-                  label={t('auth.password')}
-                  type={showPassword ? 'text' : 'password'}
-                  value={formData.password}
-                  onChange={handleInputChange('password')}
-                  error={!!validationErrors.password}
-                  helperText={validationErrors.password}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockIcon sx={{ color: darkTheme.accent.primary }} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                          aria-label={t('auth.togglePassword', { defaultValue: 'Toggle password visibility' })}
-                          sx={{ color: darkTheme.text.secondary }}
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  placeholder={t('auth.passwordPlaceholder', { defaultValue: 'Enter your password' })}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                      color: darkTheme.text.primary,
-                      '& fieldset': {
-                        borderColor: alpha(darkTheme.text.secondary, 0.3),
-                      },
-                      '&:hover fieldset': {
-                        borderColor: darkTheme.accent.primary,
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: darkTheme.accent.primary,
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: darkTheme.text.secondary,
-                      '&.Mui-focused': {
-                        color: darkTheme.accent.primary,
-                      },
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: '#ff6b6b',
-                    },
-                  }}
-                />
-              </Box>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label={t('auth.password', { defaultValue: '비밀번호' })}
+                type="password"
+                id="password"
+                autoComplete="current-password"
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                error={!!validationErrors.password}
+                helperText={validationErrors.password}
+                disabled={isLoading}
+              />
 
               {/* 이메일 기억하기 체크박스 */}
-              <Box sx={{ mb: 2 }}>
+              <Box sx={{ mt: 1, mb: 1 }}>
                 <FormControlLabel
                   control={
                     <Checkbox
                       checked={rememberEmail}
                       onChange={(e) => setRememberEmail(e.target.checked)}
                       name="rememberEmail"
-                      sx={{
-                        color: darkTheme.text.secondary,
-                        '&.Mui-checked': {
-                          color: darkTheme.accent.primary,
-                        },
-                      }}
+                      color="primary"
                     />
                   }
-                  label={t('auth.rememberEmail', { defaultValue: 'Remember email address' })}
+                  label={t('auth.rememberEmail', { defaultValue: '이메일 주소 기억하기' })}
                   sx={{ 
-                    color: darkTheme.text.secondary,
+                    color: 'text.secondary',
                     '& .MuiFormControlLabel-label': {
-                      fontSize: '0.875rem',
-                      color: darkTheme.text.secondary,
+                      fontSize: '0.875rem'
                     }
                   }}
                 />
@@ -476,80 +374,62 @@ const PlayerLogin: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
-                size="large"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
                 disabled={isLoading}
-                startIcon={<LoginIcon />}
-                sx={{
-                  py: 1.5,
-                  fontSize: '1.1rem',
-                  fontWeight: 'bold',
-                  mb: 3,
-                  bgcolor: darkTheme.accent.primary,
-                  color: darkTheme.text.primary,
-                  '&:hover': {
-                    bgcolor: alpha(darkTheme.accent.primary, 0.8),
-                  },
-                  '&:disabled': {
-                    bgcolor: alpha(darkTheme.text.secondary, 0.3),
-                    color: alpha(darkTheme.text.secondary, 0.7),
-                  },
-                }}
               >
-                {isLoading ? t('auth.loggingIn', { defaultValue: 'Logging in...' }) : t('auth.login')}
+                {isLoading ? t('auth.loggingIn', { defaultValue: '로그인 중...' }) : t('auth.login', { defaultValue: '로그인' })}
               </Button>
-            </form>
-
-            <Divider sx={{ 
-              my: 3,
-              borderColor: alpha(darkTheme.text.secondary, 0.2),
-            }} />
+            </Box>
 
             {/* 회원가입 링크 */}
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: darkTheme.text.secondary }} gutterBottom>
-                {t('auth.noAccount', { defaultValue: "Don't have an account yet?" })}
+            <Box sx={{ textAlign: 'center', mt: 3 }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {t('auth.noAccount', { defaultValue: "아직 계정이 없으신가요?" })}
               </Typography>
               <Link
                 component={RouterLink}
                 to="/player/register"
                 variant="body1"
                 sx={{
-                  color: darkTheme.accent.secondary,
                   fontWeight: 'bold',
                   textDecoration: 'none',
                   '&:hover': {
                     textDecoration: 'underline',
-                    color: alpha(darkTheme.accent.secondary, 0.8),
                   },
                 }}
               >
-                {t('auth.register')}
+                {t('auth.register', { defaultValue: '회원가입' })}
               </Link>
             </Box>
 
             {/* 관리자 로그인 링크 */}
             <Box sx={{ textAlign: 'center', mt: 2 }}>
-              <Typography variant="body2" sx={{ color: darkTheme.text.secondary }} gutterBottom>
-                {t('auth.isAdmin', { defaultValue: 'Are you an administrator?' })}
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                {t('auth.isAdmin', { defaultValue: '관리자이신가요?' })}
               </Typography>
               <Link
                 component={RouterLink}
                 to="/login"
                 variant="body2"
                 sx={{
-                  color: darkTheme.text.secondary,
+                  color: 'text.secondary',
                   textDecoration: 'none',
                   '&:hover': {
                     textDecoration: 'underline',
-                    color: darkTheme.text.accent,
                   },
                 }}
               >
-                {t('auth.adminLogin', { defaultValue: 'Admin Login' })}
+                {t('auth.adminLogin', { defaultValue: '관리자 로그인' })}
               </Link>
             </Box>
-          </CardContent>
-        </Paper>
+
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Powered by Miiracer Team
+              </Typography>
+            </Box>
+          </Paper>
+        </Box>
       </Container>
     </Box>
   );

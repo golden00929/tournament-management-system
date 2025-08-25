@@ -32,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import { usePlayerRegisterMutation } from '../../../store/api/playerApiSlice';
 import LanguageSelector from '../../../components/LanguageSelector/LanguageSelector';
+import miiracerLogo from '../../../assets/miiracer-logo.jpg';
 
 
 
@@ -80,73 +81,26 @@ const PlayerRegister: React.FC = () => {
     { value: 'nha-be', label: t('player.register.provinces.hoChiMinh') + ' - Huyện Nhà Bè' },
   ];
 
-  // 다크 테마 색상 정의
-  const darkTheme = {
+  // Miiracer 테마 색상 정의
+  const miiracerTheme = {
     background: {
-      primary: '#121212',
-      secondary: '#1e1e1e',
-      tertiary: '#2d2d2d',
+      primary: '#E31E1E',
+      secondary: '#B71C1C',
+      light: '#FF5555',
     },
     text: {
       primary: '#ffffff',
-      secondary: '#b0b0b0',
-      accent: '#e0e0e0',
+      secondary: '#f5f5f5',
+      accent: '#ffffff',
     },
     accent: {
-      primary: '#bb86fc',
-      secondary: '#03dac6',
-      gold: '#ffd700',
+      primary: '#E31E1E',
+      secondary: '#B71C1C',
       success: '#4caf50',
-      warning: '#ff9800',
       error: '#f44336',
     },
-    card: {
-      elevated: '#252525',
-      hover: '#2a2a2a',
-    }
   };
 
-  // 공통 텍스트필드 스타일
-  const textFieldStyle = {
-    '& .MuiOutlinedInput-root': {
-      bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-      color: darkTheme.text.primary,
-      '& fieldset': {
-        borderColor: alpha(darkTheme.text.secondary, 0.3),
-      },
-      '&:hover fieldset': {
-        borderColor: darkTheme.accent.primary,
-      },
-      '&.Mui-focused fieldset': {
-        borderColor: darkTheme.accent.primary,
-      },
-    },
-    '& .MuiInputLabel-root': {
-      color: darkTheme.text.secondary,
-      '&.Mui-focused': {
-        color: darkTheme.accent.primary,
-      },
-    },
-    '& .MuiFormHelperText-root': {
-      color: darkTheme.text.secondary,
-      '&.Mui-error': {
-        color: darkTheme.accent.error,
-      },
-    },
-    '& .MuiInputAdornment-root .MuiSvgIcon-root': {
-      color: darkTheme.text.secondary,
-    },
-    '& .MuiMenuItem-root': {
-      color: darkTheme.text.primary,
-      bgcolor: darkTheme.background.secondary,
-      '&:hover': {
-        bgcolor: alpha(darkTheme.accent.primary, 0.1),
-      },
-      '&.Mui-selected': {
-        bgcolor: alpha(darkTheme.accent.primary, 0.2),
-      },
-    },
-  };
 
   const [formData, setFormData] = useState({
     name: '',
@@ -280,51 +234,54 @@ const PlayerRegister: React.FC = () => {
     return (
       <Box sx={{ 
         minHeight: '100vh',
-        background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
-        color: darkTheme.text.primary,
+        background: `linear-gradient(135deg, ${miiracerTheme.background.primary} 0%, ${miiracerTheme.background.secondary} 100%)`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        py: 4,
       }}>
         <Container maxWidth="sm">
-          <Box
-            sx={{
-              minHeight: '100vh',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+          <Paper 
+            elevation={0} 
+            sx={{ 
+              p: 4, 
+              textAlign: 'center', 
+              borderRadius: 3,
+              boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+              backdropFilter: 'blur(10px)',
+              backgroundColor: 'rgba(255,255,255,0.95)',
             }}
           >
-            <Paper 
-              elevation={8} 
+            <Box
+              component="img"
+              src={miiracerLogo}
+              alt="Miiracer Logo"
+              sx={{
+                height: 60,
+                width: 'auto',
+                objectFit: 'contain',
+                mb: 3,
+              }}
+            />
+            <SportsIcon sx={{ fontSize: 64, color: miiracerTheme.accent.success, mb: 2 }} />
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: '#2C2C2C' }}>
+              {t('player.register.success', { defaultValue: '회원가입 완료!' })}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 3, color: 'text.secondary' }}>
+              {t('player.register.successMessage', { defaultValue: '회원가입이 성공적으로 완료되었습니다. 이제 로그인하여 대회에 참가하세요!' })}
+            </Typography>
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => navigate('/player/login')}
               sx={{ 
-                p: 4, 
-                textAlign: 'center', 
-                borderRadius: 3,
-                background: darkTheme.card.elevated,
-                border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
+                mt: 2,
+                py: 1.5,
               }}
             >
-              <SportsIcon sx={{ fontSize: 64, color: darkTheme.accent.success, mb: 2 }} />
-              <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
-                {t('player.register.success')}
-              </Typography>
-              <Typography variant="body1" sx={{ mb: 3, color: darkTheme.text.secondary }}>
-                {t('player.register.successMessage')}
-              </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => navigate('/player/login')}
-                sx={{ 
-                  mt: 2,
-                  bgcolor: darkTheme.accent.primary,
-                  '&:hover': {
-                    bgcolor: alpha(darkTheme.accent.primary, 0.8)
-                  }
-                }}
-              >
-                {t('player.register.loginButton')}
-              </Button>
-            </Paper>
-          </Box>
+              {t('player.register.loginButton', { defaultValue: '로그인하러 가기' })}
+            </Button>
+          </Paper>
         </Container>
       </Box>
     );
@@ -333,80 +290,56 @@ const PlayerRegister: React.FC = () => {
   return (
     <Box sx={{ 
       minHeight: '100vh',
-      background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
-      color: darkTheme.text.primary,
+      background: `linear-gradient(135deg, ${miiracerTheme.background.primary} 0%, ${miiracerTheme.background.secondary} 100%)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      py: 4,
     }}>
       <Container maxWidth="md">
-        <Box
-          sx={{
-            minHeight: '100vh',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            py: 3,
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            width: '100%',
+            borderRadius: 3,
+            boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
+            backdropFilter: 'blur(10px)',
+            backgroundColor: 'rgba(255,255,255,0.95)',
+            p: 4,
           }}
         >
-          <Paper 
-            elevation={8} 
-            sx={{ 
-              width: '100%',
-              borderRadius: 3,
-              overflow: 'hidden',
-              background: darkTheme.card.elevated,
-              border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
-            }}
-          >
-            {/* 헤더 */}
+          {/* 헤더 */}
+          <Box sx={{ textAlign: 'center', mb: 4, position: 'relative' }}>
             <Box
+              component="img"
+              src={miiracerLogo}
+              alt="Miiracer Logo"
               sx={{
-                background: `linear-gradient(135deg, ${darkTheme.accent.primary} 0%, ${darkTheme.accent.secondary} 100%)`,
-                color: darkTheme.text.primary,
-                p: 4,
-                textAlign: 'center',
-                position: 'relative',
-                '&::after': {
-                  content: '""',
-                  position: 'absolute',
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  height: '4px',
-                  background: `linear-gradient(90deg, ${darkTheme.accent.gold}, ${darkTheme.accent.secondary})`
-                }
+                height: 60,
+                width: 'auto',
+                objectFit: 'contain',
+                mb: 3,
               }}
-            >
-              <SportsIcon sx={{ fontSize: 48, mb: 1, color: darkTheme.text.primary }} />
-              <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
-                {t('player.register.title')}
-              </Typography>
-              <Typography variant="body1" sx={{ opacity: 0.9, color: alpha(darkTheme.text.primary, 0.8) }}>
-                {t('player.register.subtitle')}
-              </Typography>
-              
-              {/* 언어 선택기 */}
-              <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
-                <LanguageSelector darkMode={true} />
-              </Box>
+            />
+            <Typography component="h1" variant="h4" gutterBottom sx={{ fontWeight: 600, color: '#2C2C2C' }}>
+              Miiracer 선수 회원가입
+            </Typography>
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mb: 3 }}>
+              {t('player.register.subtitle', { defaultValue: '대회 참가를 위한 선수 등록을 해주세요' })}
+            </Typography>
+            
+            {/* 언어 선택기 */}
+            <Box sx={{ position: 'absolute', top: 0, right: 0 }}>
+              <LanguageSelector />
             </Box>
+          </Box>
 
-          <Box sx={{ p: 4, background: darkTheme.card.elevated }}>
-            {/* 에러 메시지 */}
-            {error && (
-              <Alert 
-                severity="error" 
-                sx={{ 
-                  mb: 3,
-                  bgcolor: alpha(darkTheme.accent.error, 0.1),
-                  color: darkTheme.accent.error,
-                  border: `1px solid ${alpha(darkTheme.accent.error, 0.3)}`,
-                  '& .MuiAlert-icon': {
-                    color: darkTheme.accent.error
-                  }
-                }}
-              >
-                {getErrorMessage()}
-              </Alert>
-            )}
+          {/* 에러 메시지 */}
+          {error && (
+            <Alert severity="error" sx={{ width: '100%', mb: 3 }}>
+              {getErrorMessage()}
+            </Alert>
+          )}
 
             <form onSubmit={handleSubmit}>
               <Stack spacing={3}>
@@ -431,7 +364,6 @@ const PlayerRegister: React.FC = () => {
                       ),
                     }}
                     placeholder={t('player.register.namePlaceholder')}
-                    sx={textFieldStyle}
                   />
 
                   <TextField
@@ -450,7 +382,6 @@ const PlayerRegister: React.FC = () => {
                       ),
                     }}
                     placeholder={t('player.register.emailPlaceholder')}
-                    sx={textFieldStyle}
                   />
                 </Box>
 
@@ -470,7 +401,6 @@ const PlayerRegister: React.FC = () => {
                       ),
                     }}
                     placeholder={t('player.register.phonePlaceholder')}
-                    sx={textFieldStyle}
                   />
 
                   <TextField
@@ -492,7 +422,6 @@ const PlayerRegister: React.FC = () => {
                       min: 1950,
                       max: new Date().getFullYear() - 10,
                     }}
-                    sx={textFieldStyle}
                   />
                 </Box>
 
@@ -531,10 +460,9 @@ const PlayerRegister: React.FC = () => {
                         </InputAdornment>
                       ),
                     }}
-                    sx={textFieldStyle}
                   >
                     {vietnamProvinces.map((province) => (
-                      <MenuItem key={province.value} value={province.value} sx={{ color: darkTheme.text.primary }}>
+                      <MenuItem key={province.value} value={province.value}>
                         {province.label}
                       </MenuItem>
                     ))}
@@ -550,19 +478,18 @@ const PlayerRegister: React.FC = () => {
                       error={!!validationErrors.district}
                       helperText={validationErrors.district}
                       disabled={!formData.province}
-                      sx={textFieldStyle}
-                    >
+                      >
                       {formData.province === 'ho-chi-minh' 
                         ? hoChiMinhDistricts.map((district) => (
-                            <MenuItem key={district.value} value={district.value} sx={{ color: darkTheme.text.primary }}>
+                            <MenuItem key={district.value} value={district.value}>
                               {district.label}
                             </MenuItem>
                           ))
-                        : <MenuItem value="general" sx={{ color: darkTheme.text.primary }}>{t('player.register.districtGeneral')}</MenuItem>
+                        : <MenuItem value="general">{t('player.register.districtGeneral', { defaultValue: '일반' })}</MenuItem>
                       }
                     </TextField>
                     {!formData.province && (
-                      <FormHelperText sx={{ color: darkTheme.text.secondary }}>{t('player.register.selectProvince')}</FormHelperText>
+                      <FormHelperText>{t('player.register.selectProvince', { defaultValue: '먼저 지역을 선택하세요' })}</FormHelperText>
                     )}
                   </Box>
                 </Box>
@@ -601,7 +528,6 @@ const PlayerRegister: React.FC = () => {
                       ),
                     }}
                     placeholder={t('player.register.passwordPlaceholder')}
-                    sx={textFieldStyle}
                   />
 
                   <TextField
@@ -624,7 +550,6 @@ const PlayerRegister: React.FC = () => {
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             edge="end"
                             aria-label="Toggle confirm password visibility"
-                            sx={{ color: darkTheme.text.secondary }}
                           >
                             {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
                           </IconButton>
@@ -632,7 +557,6 @@ const PlayerRegister: React.FC = () => {
                       ),
                     }}
                     placeholder={t('player.register.confirmPasswordPlaceholder')}
-                    sx={textFieldStyle}
                   />
                 </Box>
 
@@ -647,28 +571,19 @@ const PlayerRegister: React.FC = () => {
                     py: 1.5,
                     fontSize: '1.1rem',
                     fontWeight: 'bold',
-                    mt: 2,
-                    bgcolor: darkTheme.accent.primary,
-                    '&:hover': {
-                      bgcolor: alpha(darkTheme.accent.primary, 0.8)
-                    },
-                    '&:disabled': {
-                      bgcolor: alpha(darkTheme.text.secondary, 0.3),
-                      color: alpha(darkTheme.text.secondary, 0.7)
-                    }
+                    mt: 2
                   }}
                 >
-                  {isLoading ? t('player.register.registering') : t('player.register.register')}
+                  {isLoading ? t('player.register.registering', { defaultValue: '등록 중...' }) : t('player.register.register', { defaultValue: '회원가입' })}
                 </Button>
               </Stack>
             </form>
 
-            <Divider sx={{ my: 3, borderColor: alpha(darkTheme.text.secondary, 0.2) }} />
 
             {/* 로그인 링크 */}
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="body2" gutterBottom sx={{ color: darkTheme.text.secondary }}>
-                {t('player.register.alreadyHaveAccount')}
+            <Box sx={{ textAlign: 'center', mt: 3 }}>
+              <Typography variant="body2" gutterBottom color="text.secondary">
+                {t('player.register.alreadyHaveAccount', { defaultValue: '이미 계정이 있으신가요?' })}
               </Typography>
               <Link
                 component={RouterLink}
@@ -677,20 +592,22 @@ const PlayerRegister: React.FC = () => {
                 sx={{
                   fontWeight: 'bold',
                   textDecoration: 'none',
-                  color: darkTheme.accent.primary,
                   '&:hover': {
                     textDecoration: 'underline',
-                    color: alpha(darkTheme.accent.primary, 0.8),
                   },
                 }}
               >
-                {t('player.register.loginLink')}
+                {t('player.register.loginLink', { defaultValue: '로그인하기' })}
               </Link>
             </Box>
-          </Box>
+            
+            <Box sx={{ mt: 3, textAlign: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Powered by Miiracer Team
+              </Typography>
+            </Box>
         </Paper>
-      </Box>
-    </Container>
+      </Container>
     </Box>
   );
 };

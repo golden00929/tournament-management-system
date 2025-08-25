@@ -14,6 +14,7 @@ import {
   Paper,
   Chip,
   IconButton,
+  Alert,
 } from '@mui/material';
 import {
   Edit as EditIcon,
@@ -47,11 +48,13 @@ interface TournamentMatch {
 interface InteractiveTournamentBracketProps {
   participants?: Array<{ id: string; name: string; }>;
   onBracketUpdate?: (data: any) => void;
+  tournamentName?: string;
 }
 
 const InteractiveTournamentBracket: React.FC<InteractiveTournamentBracketProps> = ({ 
   participants = [],
-  onBracketUpdate 
+  onBracketUpdate,
+  tournamentName = "대회" 
 }) => {
   // 초기 데이터 설정
   const [groups, setGroups] = useState<Group[]>([
@@ -183,6 +186,20 @@ const InteractiveTournamentBracket: React.FC<InteractiveTournamentBracketProps> 
     return stats.sort((a, b) => b.wins - a.wins);
   };
 
+  // 데이터 변경 시 콜백 호출
+  useEffect(() => {
+    if (onBracketUpdate) {
+      const bracketData = {
+        groups,
+        tournament,
+        semifinals,
+        final,
+        type: 'interactive_bracket'
+      };
+      onBracketUpdate(bracketData);
+    }
+  }, [groups, tournament, semifinals, final, onBracketUpdate]);
+
   // 편집 가능한 셀 컴포넌트
   const EditableCell: React.FC<{
     value: string;
@@ -293,7 +310,7 @@ const InteractiveTournamentBracket: React.FC<InteractiveTournamentBracketProps> 
     <Box sx={{ p: 3, maxWidth: '1400px', mx: 'auto' }}>
       <Box textAlign="center" mb={4}>
         <Typography variant="h3" component="h1" fontWeight="bold" color="primary" mb={1}>
-          탁구 대회 대진표
+          {tournamentName} 대진표
         </Typography>
         <Typography variant="body1" color="text.secondary">
           선수명과 점수를 클릭하여 편집할 수 있습니다
@@ -562,9 +579,20 @@ const InteractiveTournamentBracket: React.FC<InteractiveTournamentBracketProps> 
       </Box>
 
       <Box mt={4} textAlign="center">
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" color="text.secondary" mb={2}>
           💡 팁: 선수명이나 점수를 클릭하면 편집할 수 있습니다. Enter키를 누르거나 저장 버튼을 클릭하여 변경사항을 저장하세요.
         </Typography>
+        <Box sx={{ mt: 3, p: 3, bgcolor: 'grey.50', borderRadius: 2 }}>
+          <Typography variant="h6" gutterBottom color="primary">
+            대진표 데이터 연동
+          </Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            커스텀 생성기에서 편집한 결과를 기본 대진표에 반영하려면 아래 버튼을 클릭하세요.
+          </Typography>
+          <Alert severity="info" sx={{ mb: 2 }}>
+            현재 커스텀 생성기는 독립적으로 작동합니다. 기본 대진표와의 실시간 연동은 개발 중입니다.
+          </Alert>
+        </Box>
       </Box>
     </Box>
   );
