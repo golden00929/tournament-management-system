@@ -15,12 +15,17 @@ import {
   TextField,
   MenuItem,
   Chip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   ArrowBack,
   PlayArrow,
   Refresh,
   Settings,
+  Build,
+  Visibility,
+  Edit,
 } from '@mui/icons-material';
 import {
   useGetTournamentQuery,
@@ -33,6 +38,7 @@ import BracketVisualization from '../../components/Tournament/BracketVisualizati
 import SingleEliminationBracket from '../../components/Tournament/SingleEliminationBracket';
 import RoundRobinBracket from '../../components/Tournament/RoundRobinBracket';
 import BracketConfiguration from '../../components/Tournament/BracketConfiguration';
+import CustomTournamentBracket from '../../components/Tournament/CustomTournamentBracket';
 
 interface MatchResult {
   matchId: string;
@@ -47,6 +53,7 @@ const TournamentBracket: React.FC = () => {
   const [selectedMatch, setSelectedMatch] = useState<any>(null);
   const [matchResultDialog, setMatchResultDialog] = useState(false);
   const [configurationDialog, setConfigurationDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
   const [matchResult, setMatchResult] = useState<MatchResult>({
     matchId: '',
     winnerId: '',
@@ -356,67 +363,146 @@ const TournamentBracket: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* 대진표 시각화 */}
-      {isLoadingBracket ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-          <CircularProgress />
-        </Box>
-      ) : !bracket || !bracket.matches || bracket.matches.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            아직 생성된 대진표가 없습니다.
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-            위의 "빠른 생성" 또는 "대진표 구성" 버튼을 클릭하여 대진표를 생성하세요.
-          </Typography>
-        </Box>
-      ) : tournament.tournamentType === 'single_elimination' ? (
-        <SingleEliminationBracket
-          matches={bracket?.matches || []}
-          onMatchClick={handleMatchClick}
+      {/* 대진표 탭 */}
+      <Card sx={{ mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+        >
+          <Tab 
+            icon={<Visibility />} 
+            label="기본 대진표" 
+            iconPosition="start"
+          />
+          <Tab 
+            icon={<Build />} 
+            label="커스텀 생성기" 
+            iconPosition="start"
+          />
+          <Tab 
+            icon={<Edit />} 
+            label="실시간 편집" 
+            iconPosition="start"
+          />
+        </Tabs>
+      </Card>
+
+      {/* 탭 컨텐츠 */}
+      {activeTab === 0 && (
+        <>
+          {/* 기본 대진표 시각화 */}
+          {isLoadingBracket ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+              <CircularProgress />
+            </Box>
+          ) : !bracket || !bracket.matches || bracket.matches.length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4 }}>
+              <Typography variant="h6" color="text.secondary">
+                아직 생성된 대진표가 없습니다.
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                위의 "빠른 생성" 또는 "대진표 구성" 버튼을 클릭하여 대진표를 생성하세요.
+              </Typography>
+            </Box>
+          ) : tournament.tournamentType === 'single_elimination' ? (
+            <SingleEliminationBracket
+              matches={bracket?.matches || []}
+              onMatchClick={handleMatchClick}
+            />
+          ) : tournament.tournamentType === 'round_robin' ? (
+            <RoundRobinBracket
+              matches={bracket?.matches || []}
+              onMatchClick={handleMatchClick}
+            />
+          ) : tournament.tournamentType === 'hybrid' ? (
+            // 하이브리드는 단계별로 다른 컴포넌트를 보여줄 수 있음
+            <Box>
+              {/* 전체 대회 통계 표시 */}
+              <Box sx={{ mb: 3, textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  대회 현황
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  총 {bracket?.matches ? 
+                    Array.from(new Set(
+                      bracket.matches
+                        .filter((m: any) => m.roundName.includes('Group')) // 그룹전 매치만 고려
+                        .flatMap((m: any) => [
+                          m.player1?.name || m.player1Name,
+                          m.player2?.name || m.player2Name
+                        ]).filter((name: string) => name && name !== 'TBD')
+                    )).length : 0}명 참가 • {bracket?.matches?.length || 0}경기 • {bracket?.matches?.filter((m: any) => m.status === 'completed').length || 0}경기 완료
+                </Typography>
+              </Box>
+              
+              <RoundRobinBracket
+                matches={bracket?.matches?.filter((m: any) => m.roundName.includes('Group')) || []}
+                onMatchClick={handleMatchClick}
+                hideStats={true}
+              />
+              <SingleEliminationBracket
+                matches={bracket?.matches?.filter((m: any) => !m.roundName.includes('Group')) || []}
+                onMatchClick={handleMatchClick}
+              />
+            </Box>
+          ) : (
+            <BracketVisualization
+              matches={bracket?.matches || []}
+              tournamentType={tournament.tournamentType}
+              onMatchClick={handleMatchClick}
+            />
+          )}
+        </>
+      )}
+
+      {activeTab === 1 && (
+        <CustomTournamentBracket
+          participants={participantsData?.data?.participants?.map((p: any) => ({
+            id: p.player?.id || p.id,
+            name: p.player?.name || p.name,
+            eloRating: p.player?.eloRating || 1200,
+            skillLevel: p.player?.skillLevel || 'beginner',
+            province: p.player?.province,
+            district: p.player?.district,
+          })) || []}
+          onBracketGenerated={(bracketData) => {
+            console.log('커스텀 대진표 생성됨:', bracketData);
+            // 여기서 백엔드 API 호출하여 대진표 저장
+            refetchBracket();
+          }}
+          onMatchUpdate={handleMatchClick}
+          isLoading={isGenerating}
         />
-      ) : tournament.tournamentType === 'round_robin' ? (
-        <RoundRobinBracket
-          matches={bracket?.matches || []}
-          onMatchClick={handleMatchClick}
-        />
-      ) : tournament.tournamentType === 'hybrid' ? (
-        // 하이브리드는 단계별로 다른 컴포넌트를 보여줄 수 있음
-        <Box>
-          {/* 전체 대회 통계 표시 */}
-          <Box sx={{ mb: 3, textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              대회 현황
+      )}
+
+      {activeTab === 2 && (
+        <Box sx={{ p: 3 }}>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            <Typography variant="body1" gutterBottom>
+              🚧 실시간 편집 모드 (개발 중)
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              총 {bracket?.matches ? 
-                Array.from(new Set(
-                  bracket.matches
-                    .filter((m: any) => m.roundName.includes('Group')) // 그룹전 매치만 고려
-                    .flatMap((m: any) => [
-                      m.player1?.name || m.player1Name,
-                      m.player2?.name || m.player2Name
-                    ]).filter((name: string) => name && name !== 'TBD')
-                )).length : 0}명 참가 • {bracket?.matches?.length || 0}경기 • {bracket?.matches?.filter((m: any) => m.status === 'completed').length || 0}경기 완료
+            <Typography variant="body2">
+              이 모드에서는 경기 점수를 실시간으로 편집하고 즉시 반영할 수 있습니다.
+              곧 추가될 예정입니다.
             </Typography>
-          </Box>
+          </Alert>
           
-          <RoundRobinBracket
-            matches={bracket?.matches?.filter((m: any) => m.roundName.includes('Group')) || []}
-            onMatchClick={handleMatchClick}
-            hideStats={true}
-          />
-          <SingleEliminationBracket
-            matches={bracket?.matches?.filter((m: any) => !m.roundName.includes('Group')) || []}
-            onMatchClick={handleMatchClick}
-          />
+          {/* 기존 대진표 표시하되, 편집 가능한 형태로 */}
+          {bracket && bracket.matches && bracket.matches.length > 0 ? (
+            <BracketVisualization
+              matches={bracket.matches}
+              tournamentType={tournament.tournamentType}
+              onMatchClick={handleMatchClick}
+            />
+          ) : (
+            <Typography variant="body2" color="text.secondary" align="center">
+              편집할 대진표가 없습니다. 먼저 대진표를 생성해주세요.
+            </Typography>
+          )}
         </Box>
-      ) : (
-        <BracketVisualization
-          matches={bracket?.matches || []}
-          tournamentType={tournament.tournamentType}
-          onMatchClick={handleMatchClick}
-        />
       )}
 
       {/* 대진표 구성 다이얼로그 */}
