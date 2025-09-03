@@ -85,6 +85,7 @@ export const corsConfig = cors({
       env.CLIENT_URL,
       'https://sportsgamemanager.netlify.app',
       'https://magnificent-entremet-27d825.netlify.app', // 이전 URL 백업용
+      'https://tournament-management-system-b-git-c120e3-golden00929s-projects.vercel.app', // Vercel 배포 URL
       'https://your-frontend-domain.com',
       'https://www.your-frontend-domain.com'
     ];
