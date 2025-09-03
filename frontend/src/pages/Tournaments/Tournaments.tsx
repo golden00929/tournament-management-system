@@ -5,6 +5,7 @@ import { CircularProgress, Box } from '@mui/material';
 // Lazy load tournament components
 const TournamentList = lazy(() => import('./TournamentList'));
 const TournamentForm = lazy(() => import('./TournamentForm'));
+const TournamentWizard = lazy(() => import('../../components/Tournament/TournamentWizard'));
 const TournamentDetail = lazy(() => import('./TournamentDetail'));
 const TournamentBracket = lazy(() => import('./TournamentBracket'));
 
@@ -30,7 +31,8 @@ const Tournaments: React.FC = () => {
     <Suspense fallback={<TournamentLoadingFallback />}>
       <Routes>
         <Route index element={<TournamentList />} />
-        <Route path="create" element={<TournamentForm />} />
+        <Route path="create" element={<TournamentWizard />} />
+        <Route path="create-simple" element={<TournamentForm />} />
         <Route path=":id" element={<TournamentDetail />} />
         <Route path=":id/edit" element={<TournamentForm />} />
         <Route path=":id/bracket" element={<TournamentBracket />} />

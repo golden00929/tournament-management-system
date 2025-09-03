@@ -206,6 +206,14 @@ export const playerApi = apiSlice.injectEndpoints({
         responseHandler: (response: Response) => response.blob(),
       }),
     }),
+    importPlayers: builder.mutation<any, FormData>({
+      query: (formData) => ({
+        url: '/players/import/csv',
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['Player'],
+    }),
     adjustPlayerRating: builder.mutation<any, { id: string; newRating: number; reason?: string }>({
       query: ({ id, newRating, reason = 'manual_adjustment' }) => ({
         url: `/players/${id}/rating`,
@@ -438,6 +446,7 @@ export const {
   useUpdatePlayerMutation,
   useDeletePlayerMutation,
   useExportPlayersQuery,
+  useImportPlayersMutation,
   useAdjustPlayerRatingMutation
 } = playerApi;
 export const {

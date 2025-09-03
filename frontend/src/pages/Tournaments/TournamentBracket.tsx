@@ -38,6 +38,8 @@ import SingleEliminationBracket from '../../components/Tournament/SingleEliminat
 import RoundRobinBracket from '../../components/Tournament/RoundRobinBracket';
 import BracketConfiguration from '../../components/Tournament/BracketConfiguration';
 import InteractiveTournamentBracket from '../../components/Tournament/InteractiveTournamentBracket';
+import GroupStageMatches from '../../components/Tournament/GroupStageMatches';
+import TournamentRounds from '../../components/Tournament/TournamentRounds';
 
 interface MatchResult {
   matchId: string;
@@ -373,12 +375,12 @@ const TournamentBracket: React.FC = () => {
         >
           <Tab 
             icon={<Visibility />} 
-            label="기본 대진표" 
+            label="경기 상세표" 
             iconPosition="start"
           />
           <Tab 
             icon={<Build />} 
-            label="커스텀 생성기" 
+            label="대회 대진표" 
             iconPosition="start"
           />
         </Tabs>
@@ -407,19 +409,19 @@ const TournamentBracket: React.FC = () => {
               onMatchClick={handleMatchClick}
             />
           ) : tournament.tournamentType === 'round_robin' ? (
-            <RoundRobinBracket
+            <GroupStageMatches
               matches={bracket?.matches || []}
               onMatchClick={handleMatchClick}
             />
           ) : tournament.tournamentType === 'hybrid' ? (
-            // 하이브리드는 단계별로 다른 컴포넌트를 보여줄 수 있음
+            // 하이브리드는 조별리그와 토너먼트 단계를 분리하여 표시
             <Box>
               {/* 전체 대회 통계 표시 */}
-              <Box sx={{ mb: 3, textAlign: 'center', p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
-                <Typography variant="h6" gutterBottom>
+              <Box sx={{ mb: 4, textAlign: 'center', p: 3, bgcolor: 'primary.light', borderRadius: 1 }}>
+                <Typography variant="h6" gutterBottom sx={{ color: 'primary.contrastText' }}>
                   대회 현황
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body1" sx={{ color: 'primary.contrastText' }}>
                   총 {bracket?.matches ? 
                     Array.from(new Set(
                       bracket.matches
@@ -432,15 +434,21 @@ const TournamentBracket: React.FC = () => {
                 </Typography>
               </Box>
               
-              <RoundRobinBracket
-                matches={bracket?.matches?.filter((m: any) => m.roundName.includes('Group')) || []}
-                onMatchClick={handleMatchClick}
-                hideStats={true}
-              />
-              <SingleEliminationBracket
-                matches={bracket?.matches?.filter((m: any) => !m.roundName.includes('Group')) || []}
-                onMatchClick={handleMatchClick}
-              />
+              {/* 조별 리그 단계 */}
+              <Box sx={{ mb: 4 }}>
+                <GroupStageMatches
+                  matches={bracket?.matches?.filter((m: any) => m.roundName.includes('Group')) || []}
+                  onMatchClick={handleMatchClick}
+                />
+              </Box>
+              
+              {/* 토너먼트 단계 */}
+              <Box>
+                <TournamentRounds
+                  matches={bracket?.matches?.filter((m: any) => !m.roundName.includes('Group')) || []}
+                  onMatchClick={handleMatchClick}
+                />
+              </Box>
             </Box>
           ) : (
             <BracketVisualization

@@ -101,6 +101,39 @@ const PlayerRegister: React.FC = () => {
     },
   };
 
+  // 다크 테마 (miiracerTheme와 동일하게 설정)
+  const darkTheme = {
+    text: {
+      primary: '#ffffff',
+      secondary: '#f5f5f5',
+    },
+  };
+
+  // TextField 스타일
+  const textFieldStyle = {
+    '& .MuiOutlinedInput-root': {
+      color: '#ffffff',
+      '& fieldset': {
+        borderColor: alpha('#ffffff', 0.3),
+      },
+      '&:hover fieldset': {
+        borderColor: alpha('#ffffff', 0.5),
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#ffffff',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: alpha('#ffffff', 0.7),
+      '&.Mui-focused': {
+        color: '#ffffff',
+      },
+    },
+    '& .MuiFormHelperText-root': {
+      color: alpha('#ffffff', 0.6),
+    },
+  };
+
 
   const [formData, setFormData] = useState({
     name: '',

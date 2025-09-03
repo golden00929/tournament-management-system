@@ -41,8 +41,11 @@ import {
   Visibility,
   Settings,
   FileDownload,
+  FileUpload,
+  CloudUpload,
 } from '@mui/icons-material';
-import { useGetPlayersQuery, useDeletePlayerMutation, useAdjustPlayerRatingMutation } from '../../store/api/apiSlice';
+import { useGetPlayersQuery, useDeletePlayerMutation, useAdjustPlayerRatingMutation, useImportPlayersMutation } from '../../store/api/apiSlice';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const getSkillLevelColor = (skillLevel: string): 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'success' | 'warning' => {
   switch (skillLevel) {
@@ -85,10 +88,15 @@ const PlayerList: React.FC = () => {
   const [newRating, setNewRating] = useState<string>('');
   const [reason, setReason] = useState('manual_adjustment');
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importResult, setImportResult] = useState<any>(null);
 
   const { data, isLoading, error } = useGetPlayersQuery({ limit: 500 });
   const [deletePlayer, { isLoading: isDeleting }] = useDeletePlayerMutation();
   const [adjustPlayerRating, { isLoading: isAdjusting }] = useAdjustPlayerRatingMutation();
+  const [importPlayers, { isLoading: isImporting }] = useImportPlayersMutation();
+  const { showSuccessNotification, showErrorNotification } = useNotifications();
   
   // CSV export function
   const handleExportCSV = async () => {
@@ -134,6 +142,95 @@ const PlayerList: React.FC = () => {
       console.error('Export failed:', error);
       alert('CSV 내보내기에 실패했습니다.');
     }
+  };
+
+  // CSV import functions
+  const handleImportCSV = () => {
+    setImportDialogOpen(true);
+    setImportResult(null);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === 'text/csv') {
+      setImportFile(file);
+    } else {
+      alert('CSV 파일만 업로드할 수 있습니다.');
+      event.target.value = '';
+    }
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      alert('파일을 선택해주세요.');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('csvFile', importFile);
+
+      const result = await importPlayers(formData).unwrap();
+      setImportResult(result);
+      setImportFile(null);
+      
+      // Show success notification
+      if (result.success && result.data) {
+        const { validCount, duplicateCount, errorCount } = result.data;
+        showSuccessNotification(
+          `총 ${validCount}명의 선수가 성공적으로 가져와졌습니다. ${duplicateCount > 0 ? `중복: ${duplicateCount}명, ` : ''}${errorCount > 0 ? `오류: ${errorCount}명` : ''}`,
+          'CSV 가져오기 완료',
+          { category: 'player', duration: 8000 }
+        );
+      }
+      
+      // Reset file input
+      const fileInput = document.getElementById('csv-file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+      
+    } catch (error: any) {
+      console.error('Import failed:', error);
+      const errorMessage = error?.data?.message || 'CSV 가져오기에 실패했습니다.';
+      
+      setImportResult({
+        success: false,
+        message: errorMessage,
+        data: error?.data
+      });
+
+      // Show error notification
+      showErrorNotification(
+        errorMessage,
+        'CSV 가져오기 실패',
+        { category: 'player' }
+      );
+    }
+  };
+
+  const handleCloseImportDialog = () => {
+    setImportDialogOpen(false);
+    setImportFile(null);
+    setImportResult(null);
+  };
+
+  const downloadSampleCSV = () => {
+    const sampleData = [
+      ['이름', '이메일', '전화번호', '출생년도', '성별', '지역', '시군구', 'ELO레이팅', '실력수준'],
+      ['홍길동', 'hong@example.com', '010-1234-5678', '1990', '남성', '서울', '강남구', '1200', '초급'],
+      ['김영희', 'kim@example.com', '010-9876-5432', '1995', '여성', '부산', '해운대구', '1400', '중급'],
+    ];
+    
+    const csvContent = sampleData.map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'players_sample.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Multi-select handlers
@@ -303,6 +400,14 @@ const PlayerList: React.FC = () => {
             onClick={handleExportCSV}
           >
             CSV 내보내기
+          </Button>
+          <Button 
+            variant="outlined"
+            color="secondary"
+            startIcon={<FileUpload />}
+            onClick={handleImportCSV}
+          >
+            CSV 가져오기
           </Button>
           <Button 
             variant="contained" 
@@ -574,6 +679,139 @@ const PlayerList: React.FC = () => {
             {isAdjusting ? <CircularProgress size={20} sx={{ mr: 1 }} /> : null}
             조정하기
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* CSV Import Dialog */}
+      <Dialog 
+        open={importDialogOpen} 
+        onClose={handleCloseImportDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <CloudUpload />
+            CSV 파일로 선수 일괄 등록
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {!importResult ? (
+            <Box sx={{ mt: 2 }}>
+              <Alert severity="info" sx={{ mb: 3 }}>
+                <Typography variant="body2" gutterBottom>
+                  <strong>CSV 파일 형식:</strong>
+                </Typography>
+                <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                  이름, 이메일, 전화번호, 출생년도, 성별, 지역, 시군구, ELO레이팅, 실력수준
+                </Typography>
+                <Typography variant="body2" sx={{ mt: 1 }}>
+                  • 이름과 이메일은 필수항목입니다<br/>
+                  • 성별: "남성", "여성", "male", "female" 등<br/>
+                  • 실력수준: "초급", "중급", "고급", "전문가" 등
+                </Typography>
+              </Alert>
+
+              <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={downloadSampleCSV}
+                >
+                  샘플 파일 다운로드
+                </Button>
+              </Box>
+
+              <input
+                id="csv-file-input"
+                type="file"
+                accept=".csv"
+                onChange={handleFileChange}
+                style={{ display: 'none' }}
+              />
+              <label htmlFor="csv-file-input">
+                <Button
+                  variant="outlined"
+                  component="span"
+                  startIcon={<FileUpload />}
+                  fullWidth
+                  sx={{ 
+                    p: 3, 
+                    border: '2px dashed',
+                    borderColor: 'primary.main',
+                    '&:hover': {
+                      borderColor: 'primary.dark',
+                      bgcolor: 'primary.50'
+                    }
+                  }}
+                >
+                  {importFile ? importFile.name : 'CSV 파일 선택'}
+                </Button>
+              </label>
+
+              {importFile && (
+                <Box sx={{ mt: 2, p: 2, bgcolor: 'grey.50', borderRadius: 1 }}>
+                  <Typography variant="body2">
+                    선택된 파일: <strong>{importFile.name}</strong>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    파일 크기: {(importFile.size / 1024).toFixed(2)} KB
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ mt: 2 }}>
+              <Alert 
+                severity={importResult.success ? "success" : "error"} 
+                sx={{ mb: 2 }}
+              >
+                <Typography variant="body1" gutterBottom>
+                  {importResult.message}
+                </Typography>
+                {importResult.data && (
+                  <Box sx={{ mt: 1 }}>
+                    <Typography variant="body2">
+                      • 총 처리: {importResult.data.totalRows}건<br/>
+                      • 성공: {importResult.data.validCount}건<br/>
+                      • 중복: {importResult.data.duplicateCount}건<br/>
+                      • 오류: {importResult.data.errorCount}건
+                    </Typography>
+                  </Box>
+                )}
+              </Alert>
+
+              {importResult.data?.errors && importResult.data.errors.length > 0 && (
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" gutterBottom color="error">
+                    오류 상세:
+                  </Typography>
+                  <Box sx={{ maxHeight: 200, overflow: 'auto', p: 1, bgcolor: 'grey.50', borderRadius: 1 }}>
+                    {importResult.data.errors.map((error: string, index: number) => (
+                      <Typography key={index} variant="body2" color="error" sx={{ fontFamily: 'monospace' }}>
+                        {error}
+                      </Typography>
+                    ))}
+                  </Box>
+                </Box>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseImportDialog}>
+            {importResult ? '닫기' : '취소'}
+          </Button>
+          {!importResult && (
+            <Button
+              onClick={handleImportSubmit}
+              variant="contained"
+              disabled={!importFile || isImporting}
+              startIcon={isImporting ? <CircularProgress size={20} /> : <CloudUpload />}
+            >
+              {isImporting ? '처리 중...' : '가져오기'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>

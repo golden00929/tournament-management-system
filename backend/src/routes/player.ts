@@ -236,6 +236,9 @@ router.get('/:id', authenticate, async (req: AuthRequest, res) => {
 // Create new player
 router.post('/', authenticate, requireRole(['admin']), async (req: AuthRequest, res) => {
   try {
+    console.log('=== CREATE PLAYER API DEBUG ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    
     const {
       name,
       email,
@@ -243,6 +246,7 @@ router.post('/', authenticate, requireRole(['admin']), async (req: AuthRequest, 
       birthYear,
       birthDate,
       gender,
+      skillLevel,
       province,
       district,
       address,
@@ -253,7 +257,7 @@ router.post('/', authenticate, requireRole(['admin']), async (req: AuthRequest, 
     } = req.body;
 
     // Validate required fields
-    if (!name || !email || !phone || !birthYear || !gender || !province || !district) {
+    if (!name || !email || !phone || !gender || !province || !district) {
       return res.status(400).json({
         success: false,
         message: '필수 정보를 모두 입력해주세요.',
@@ -262,22 +266,38 @@ router.post('/', authenticate, requireRole(['admin']), async (req: AuthRequest, 
     }
 
     const rating = initialRating || parseInt(process.env.DEFAULT_ELO_RATING || '1200');
+    
+    // Use provided skillLevel or derive from rating
+    const finalSkillLevel = skillLevel || EloRatingService.getSkillLevel(rating);
+    
+    console.log('Final data to create:', {
+      name,
+      email,
+      phone,
+      birthYear,
+      birthDate,
+      gender,
+      skillLevel: finalSkillLevel,
+      province,
+      district,
+      rating
+    });
 
     const player = await prisma.player.create({
       data: {
         name,
         email,
         phone,
-        birthYear: parseInt(birthYear),
+        birthYear: birthYear ? parseInt(birthYear) : null,
         birthDate: birthDate ? new Date(birthDate) : null,
         gender,
+        skillLevel: finalSkillLevel,
         province,
         district,
         address,
         emergencyContact,
         emergencyPhone,
         eloRating: rating,
-        skillLevel: EloRatingService.getSkillLevel(rating),
         notes,
       }
     });
@@ -300,11 +320,19 @@ router.post('/', authenticate, requireRole(['admin']), async (req: AuthRequest, 
     });
   } catch (error) {
     console.error('Create player error:', error);
-    res.status(500).json({
-      success: false,
-      message: '선수 등록 중 오류가 발생했습니다.',
-      error: 'CREATE_PLAYER_ERROR'
-    });
+    if (error.code === 'P2002') {
+      res.status(400).json({
+        success: false,
+        message: '이미 등록된 이메일입니다.',
+        error: 'EMAIL_ALREADY_EXISTS'
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: '선수 등록 중 오류가 발생했습니다.',
+        error: 'CREATE_PLAYER_ERROR'
+      });
+    }
   }
 });
 

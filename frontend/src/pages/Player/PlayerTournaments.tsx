@@ -16,15 +16,13 @@ import {
   Chip,
   Alert,
   CircularProgress,
-  Paper,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
+  Stack,
 } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import {
-  ArrowBack as BackIcon,
   Search as SearchIcon,
   LocationOn as LocationIcon,
   CalendarToday as CalendarIcon,
@@ -33,14 +31,13 @@ import {
   EmojiEvents as TrophyIcon,
   Add as AddIcon,
 } from '@mui/icons-material';
+import PlayerLayout from '../../components/Player/Layout/PlayerLayout';
 import {
   useGetPublicTournamentsQuery,
   useApplyToTournamentMutation,
 } from '../../store/api/playerApiSlice';
-import LanguageSelector from '../../components/LanguageSelector/LanguageSelector';
 
 const PlayerTournaments: React.FC = () => {
-  const navigate = useNavigate();
   const { t } = useTranslation();
   const [applyToTournament] = useApplyToTournamentMutation();
 
@@ -97,6 +94,8 @@ const PlayerTournaments: React.FC = () => {
       if (result.success) {
         setApplyDialogOpen(false);
         setSelectedTournament(null);
+        // 데이터를 새로고침하여 참가 신청 상태 업데이트
+        refetch();
         alert(t('player.tournaments.applySuccess'));
       }
     } catch (err: any) {
@@ -137,409 +136,222 @@ const PlayerTournaments: React.FC = () => {
     return <Chip label={t('tournament.status.open')} color="success" size="small" />;
   };
 
-  // 다크 테마 색상 정의
-  const darkTheme = {
-    background: {
-      primary: '#121212',
-      secondary: '#1e1e1e',
-      tertiary: '#2d2d2d',
-    },
-    text: {
-      primary: '#ffffff',
-      secondary: '#b0b0b0',
-      accent: '#e0e0e0',
-    },
-    accent: {
-      primary: '#bb86fc',
-      secondary: '#03dac6',
-      gold: '#ffd700',
-      success: '#4caf50',
-      warning: '#ff9800',
-      error: '#f44336',
-    },
-    card: {
-      elevated: '#252525',
-      hover: '#2a2a2a',
-    },
-  };
+  const tournaments = tournamentsData?.data?.tournaments || [];
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh',
-      background: `linear-gradient(135deg, ${darkTheme.background.primary} 0%, ${darkTheme.background.secondary} 100%)`,
-      color: darkTheme.text.primary,
-      pb: { xs: 10, sm: 4 }
-    }}>
-      <Container maxWidth="lg" sx={{ py: 4 }}>
-        {/* 헤더 */}
-        <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button
-            variant="outlined"
-            startIcon={<BackIcon />}
-            onClick={() => navigate('/player/dashboard')}
-            sx={{
-              borderColor: alpha(darkTheme.text.secondary, 0.3),
-              color: darkTheme.text.secondary,
-              '&:hover': {
-                borderColor: darkTheme.accent.primary,
-                color: darkTheme.accent.primary,
-                bgcolor: alpha(darkTheme.accent.primary, 0.1)
-              }
-            }}
-          >
-            {t('player.matches.backToDashboard')}
-          </Button>
-          <Typography variant="h4" fontWeight="bold" sx={{ flex: 1, color: darkTheme.text.primary }}>
-            {t('player.tournaments.title')}
-          </Typography>
-          <LanguageSelector />
-        </Box>
+    <PlayerLayout>
+      <Container maxWidth="lg">
+        <Typography variant="h4" sx={{ mb: 4, fontWeight: 'bold' }}>
+          🏸 참가 가능한 대회
+        </Typography>
 
         {/* 검색 필터 */}
-        <Paper sx={{ 
-          p: 3, 
-          mb: 3,
-          bgcolor: darkTheme.card.elevated,
-          border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`
-        }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
-            {t('player.tournaments.search', { defaultValue: 'Search Tournaments' })}
-          </Typography>
-        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}>
-          <Box sx={{ flex: '1 1 300px', minWidth: '200px' }}>
-            <TextField
-              fullWidth
-              label={t('player.tournaments.searchName', { defaultValue: 'Search by name' })}
-              value={searchParams.search}
-              onChange={handleSearchChange('search')}
-              placeholder={t('player.tournaments.searchPlaceholder', { defaultValue: 'Enter tournament name' })}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                  color: darkTheme.text.primary,
-                  '& fieldset': {
-                    borderColor: alpha(darkTheme.text.secondary, 0.3),
-                  },
-                  '&:hover fieldset': {
-                    borderColor: darkTheme.accent.primary,
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: darkTheme.accent.primary,
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: darkTheme.text.secondary,
-                  '&.Mui-focused': {
-                    color: darkTheme.accent.primary,
-                  },
-                },
-              }}
-            />
-          </Box>
-          
-          <Box sx={{ flex: '1 1 150px', minWidth: '120px' }}>
-            <FormControl fullWidth sx={{
-              '& .MuiInputLabel-root': {
-                color: darkTheme.text.secondary,
-                '&.Mui-focused': {
-                  color: darkTheme.accent.primary,
-                },
-              },
-              '& .MuiOutlinedInput-root': {
-                bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                color: darkTheme.text.primary,
-                '& fieldset': {
-                  borderColor: alpha(darkTheme.text.secondary, 0.3),
-                },
-                '&:hover fieldset': {
-                  borderColor: darkTheme.accent.primary,
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: darkTheme.accent.primary,
-                },
-              },
-            }}>
-              <InputLabel>{t('player.tournaments.category')}</InputLabel>
-              <Select
-                value={searchParams.category}
-                onChange={handleSearchChange('category')}
-                label={t('player.tournaments.category')}
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      bgcolor: darkTheme.card.elevated,
-                      '& .MuiMenuItem-root': {
-                        color: darkTheme.text.primary,
-                        '&:hover': {
-                          bgcolor: alpha(darkTheme.accent.primary, 0.1),
-                        },
-                        '&.Mui-selected': {
-                          bgcolor: alpha(darkTheme.accent.primary, 0.2),
-                          '&:hover': {
-                            bgcolor: alpha(darkTheme.accent.primary, 0.3),
-                          },
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="">{t('common.all')}</MenuItem>
-                <MenuItem value="badminton">{t('tournament.category.badminton')}</MenuItem>
-                <MenuItem value="tennis">{t('tournament.category.tennis')}</MenuItem>
-                <MenuItem value="pickleball">{t('tournament.category.pickleball')}</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: '1 1 150px', minWidth: '120px' }}>
-            <FormControl fullWidth sx={{
-              '& .MuiInputLabel-root': {
-                color: darkTheme.text.secondary,
-                '&.Mui-focused': {
-                  color: darkTheme.accent.primary,
-                },
-              },
-              '& .MuiOutlinedInput-root': {
-                bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                color: darkTheme.text.primary,
-                '& fieldset': {
-                  borderColor: alpha(darkTheme.text.secondary, 0.3),
-                },
-                '&:hover fieldset': {
-                  borderColor: darkTheme.accent.primary,
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: darkTheme.accent.primary,
-                },
-              },
-            }}>
-              <InputLabel>{t('player.tournaments.skillLevel')}</InputLabel>
-              <Select
-                value={searchParams.skillLevel}
-                onChange={handleSearchChange('skillLevel')}
-                label={t('player.tournaments.skillLevel')}
-                MenuProps={{
-                  PaperProps: {
-                    sx: {
-                      bgcolor: darkTheme.card.elevated,
-                      '& .MuiMenuItem-root': {
-                        color: darkTheme.text.primary,
-                        '&:hover': {
-                          bgcolor: alpha(darkTheme.accent.primary, 0.1),
-                        },
-                        '&.Mui-selected': {
-                          bgcolor: alpha(darkTheme.accent.primary, 0.2),
-                          '&:hover': {
-                            bgcolor: alpha(darkTheme.accent.primary, 0.3),
-                          },
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="">{t('common.all')}</MenuItem>
-                <MenuItem value="a_class">{t('tournament.skillLevel.expert')}</MenuItem>
-                <MenuItem value="b_class">{t('tournament.skillLevel.advanced')}</MenuItem>
-                <MenuItem value="c_class">{t('tournament.skillLevel.intermediate')}</MenuItem>
-                <MenuItem value="d_class">{t('tournament.skillLevel.beginner')}</MenuItem>
-              </Select>
-            </FormControl>
-          </Box>
-
-          <Box sx={{ flex: '1 1 200px', minWidth: '150px' }}>
-            <TextField
-              fullWidth
-              label={t('player.matches.location')}
-              value={searchParams.location}
-              onChange={handleSearchChange('location')}
-              placeholder={t('player.tournaments.locationPlaceholder', { defaultValue: 'e.g. Ho Chi Minh City' })}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                  color: darkTheme.text.primary,
-                  '& fieldset': {
-                    borderColor: alpha(darkTheme.text.secondary, 0.3),
-                  },
-                  '&:hover fieldset': {
-                    borderColor: darkTheme.accent.primary,
-                  },
-                  '&.Mui-focused fieldset': {
-                    borderColor: darkTheme.accent.primary,
-                  },
-                },
-                '& .MuiInputLabel-root': {
-                  color: darkTheme.text.secondary,
-                  '&.Mui-focused': {
-                    color: darkTheme.accent.primary,
-                  },
-                },
-              }}
-            />
-          </Box>
-
-          <Box sx={{ flex: '0 0 auto' }}>
-            <Button
-              variant="contained"
-              startIcon={<SearchIcon />}
-              onClick={handleSearch}
-              sx={{ 
-                height: 56, 
-                px: 3,
-                bgcolor: darkTheme.accent.primary,
-                '&:hover': {
-                  bgcolor: alpha(darkTheme.accent.primary, 0.8)
-                }
-              }}
+        <Card sx={{ mb: 4, borderRadius: 3 }}>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: '#FF6B35', mb: 3 }}>
+              🔍 대회 검색
+            </Typography>
+            <Stack 
+              direction={{ xs: 'column', sm: 'row' }} 
+              spacing={2} 
+              sx={{ flexWrap: 'wrap' }}
             >
-              {t('common.search')}
-            </Button>
-          </Box>
-        </Box>
-      </Paper>
+              <Box sx={{ flex: '1 1 250px' }}>
+                <TextField
+                  fullWidth
+                  label="대회 이름"
+                  value={searchParams.search}
+                  onChange={handleSearchChange('search')}
+                  placeholder="대회 이름을 입력하세요"
+                />
+              </Box>
+              <Box sx={{ flex: '1 1 200px' }}>
+                <FormControl fullWidth>
+                  <InputLabel>카테고리</InputLabel>
+                  <Select
+                    value={searchParams.category}
+                    onChange={handleSearchChange('category')}
+                    label="카테고리"
+                  >
+                    <MenuItem value="">전체</MenuItem>
+                    <MenuItem value="badminton">배드민턴</MenuItem>
+                    <MenuItem value="tennis">테니스</MenuItem>
+                    <MenuItem value="pickleball">피클볼</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+              <Box sx={{ flex: '1 1 200px' }}>
+                <FormControl fullWidth>
+                  <InputLabel>실력 수준</InputLabel>
+                  <Select
+                    value={searchParams.skillLevel}
+                    onChange={handleSearchChange('skillLevel')}
+                    label="실력 수준"
+                  >
+                    <MenuItem value="">전체</MenuItem>
+                    <MenuItem value="a_class">A급 (Expert)</MenuItem>
+                    <MenuItem value="b_class">B급 (Advanced)</MenuItem>
+                    <MenuItem value="c_class">C급 (Intermediate)</MenuItem>
+                    <MenuItem value="d_class">D급 (Beginner)</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+              <Box sx={{ flex: '0 1 150px' }}>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<SearchIcon />}
+                  onClick={handleSearch}
+                  sx={{ 
+                    height: '56px',
+                    bgcolor: '#FF6B35',
+                    '&:hover': { bgcolor: '#E55A2B' }
+                  }}
+                >
+                  검색
+                </Button>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
 
         {/* 로딩/에러 처리 */}
         {isLoading && (
           <Box display="flex" justifyContent="center" py={4}>
-            <CircularProgress sx={{ color: darkTheme.accent.primary }} />
+            <CircularProgress />
           </Box>
         )}
 
         {error && (
-          <Alert 
-            severity="error" 
-            sx={{ 
-              mb: 3,
-              bgcolor: alpha(darkTheme.accent.error, 0.1),
-              color: darkTheme.accent.error,
-              border: `1px solid ${alpha(darkTheme.accent.error, 0.3)}`,
-              '& .MuiAlert-icon': {
-                color: darkTheme.accent.error
-              }
-            }}
-          >
-            {t('player.tournaments.errorLoading', { defaultValue: 'Failed to load tournaments. Please try again.' })}
+          <Alert severity="error" sx={{ mb: 3 }}>
+            대회 목록을 불러오는 중 오류가 발생했습니다.
           </Alert>
         )}
 
         {/* 대회 목록 */}
-        {tournamentsData?.data?.tournaments && (
+        {tournaments.length > 0 && (
           <>
-            <Typography variant="h6" gutterBottom sx={{ color: darkTheme.text.primary }}>
-              {t('player.tournaments.searchResults', { defaultValue: 'Search Results: {{count}} tournaments', count: tournamentsData.data.tournaments.length })}
+            <Typography variant="h6" gutterBottom sx={{ mb: 3 }}>
+              검색 결과: {tournaments.length}개 대회
             </Typography>
             
-            <Box sx={{ 
-              display: 'grid', 
-              gridTemplateColumns: { 
-                xs: '1fr', 
-                md: 'repeat(2, 1fr)', 
-                lg: 'repeat(3, 1fr)' 
-              }, 
-              gap: 3 
-            }}>
-              {tournamentsData.data.tournaments.map((tournament) => (
-                <Card 
-                  key={tournament.id} 
-                  sx={{ 
-                    height: '100%', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    bgcolor: darkTheme.card.elevated,
-                    border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`,
-                    '&:hover': {
-                      bgcolor: darkTheme.card.hover,
-                      transform: 'translateY(-2px)',
-                      boxShadow: `0 8px 25px ${alpha(darkTheme.accent.primary, 0.2)}`
-                    },
-                    transition: 'all 0.2s ease-in-out'
-                  }}
-                >
-                  <CardContent sx={{ flex: 1 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
-                        {tournament.name}
+            <Stack 
+              direction="row" 
+              spacing={3} 
+              sx={{ flexWrap: 'wrap' }}
+            >
+              {tournaments.map((tournament) => (
+                <Box sx={{ flex: '1 1 350px', mb: 3 }} key={tournament.id}>
+                  <Card 
+                    sx={{ 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      borderRadius: 3,
+                      '&:hover': {
+                        transform: 'translateY(-4px)',
+                        boxShadow: '0 8px 25px rgba(255, 107, 53, 0.2)'
+                      },
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <CardContent sx={{ flex: 1, p: 3 }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="flex-start" sx={{ mb: 2 }}>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                          {tournament.name}
+                        </Typography>
+                        {getStatusChip(tournament)}
+                      </Stack>
+
+                      <Typography variant="body2" sx={{ mb: 2, minHeight: 40, color: 'text.secondary' }}>
+                        {tournament.description}
                       </Typography>
-                      {getStatusChip(tournament)}
-                    </Box>
 
-                    <Typography variant="body2" sx={{ mb: 2, minHeight: 40, color: darkTheme.text.secondary }}>
-                      {tournament.description}
-                    </Typography>
+                      <Box sx={{ mb: 2 }}>
+                        <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
+                          <Chip
+                            label={tournament.category}
+                            color="primary"
+                            size="small"
+                          />
+                          <Chip
+                            label={getSkillLevelDisplay(tournament.skillLevel).label}
+                            color={getSkillLevelDisplay(tournament.skillLevel).color}
+                            size="small"
+                          />
+                        </Stack>
+                      </Box>
 
-                  <Box sx={{ mb: 2 }}>
-                    <Chip
-                      label={tournament.category}
-                      color="primary"
-                      size="small"
-                      sx={{ mr: 1, mb: 1 }}
-                    />
-                    <Chip
-                      label={getSkillLevelDisplay(tournament.skillLevel).label}
-                      color={getSkillLevelDisplay(tournament.skillLevel).color}
-                      size="small"
-                      sx={{ mb: 1 }}
-                    />
-                  </Box>
+                      <Box sx={{ mb: 2 }}>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center">
+                            <LocationIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {tournament.location}
+                            </Typography>
+                          </Stack>
+                          
+                          <Stack direction="row" alignItems="center">
+                            <CalendarIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {formatDate(tournament.startDate)}
+                            </Typography>
+                          </Stack>
 
-                  <Box sx={{ mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <LocationIcon sx={{ fontSize: 16, mr: 1, color: darkTheme.text.secondary }} />
-                      <Typography variant="body2" sx={{ color: darkTheme.text.secondary }}>
-                        {tournament.location}
-                      </Typography>
-                    </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <CalendarIcon sx={{ fontSize: 16, mr: 1, color: darkTheme.text.secondary }} />
-                      <Typography variant="body2" sx={{ color: darkTheme.text.secondary }}>
-                        {formatDate(tournament.startDate)}
-                      </Typography>
-                    </Box>
+                          <Stack direction="row" alignItems="center">
+                            <PeopleIcon sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
+                            <Typography variant="body2" color="text.secondary">
+                              {tournament.currentParticipants || 0}/{tournament.maxParticipants} 명
+                            </Typography>
+                          </Stack>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                      <PeopleIcon sx={{ fontSize: 16, mr: 1, color: darkTheme.text.secondary }} />
-                      <Typography variant="body2" sx={{ color: darkTheme.text.secondary }}>
-                        {tournament.currentParticipants}/{tournament.maxParticipants} {t('player.tournaments.participants')}
-                      </Typography>
-                    </Box>
+                          <Stack direction="row" alignItems="center">
+                            <MoneyIcon sx={{ fontSize: 16, mr: 1, color: '#FF6B35' }} />
+                            <Typography variant="body2" sx={{ color: '#FF6B35', fontWeight: 600 }}>
+                              {formatCurrency(tournament.participantFee)}
+                            </Typography>
+                          </Stack>
+                        </Stack>
+                      </Box>
 
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <MoneyIcon sx={{ fontSize: 16, mr: 1, color: darkTheme.accent.gold }} />
-                      <Typography variant="body2" sx={{ color: darkTheme.accent.gold, fontWeight: 600 }}>
-                        {formatCurrency(tournament.participantFee)}
-                      </Typography>
-                    </Box>
-                  </Box>
+                      <Box sx={{ mt: 'auto', pt: 2 }}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          startIcon={<AddIcon />}
+                          onClick={() => handleApplyClick(tournament)}
+                          disabled={!tournament.isRegistrationOpen || (tournament.currentParticipants || 0) >= tournament.maxParticipants}
+                          sx={{
+                            bgcolor: '#8E24AA',
+                            '&:hover': { bgcolor: '#7B1FA2' },
+                            '&:disabled': {
+                              bgcolor: 'rgba(0,0,0,0.12)',
+                              color: 'rgba(0,0,0,0.26)'
+                            }
+                          }}
+                        >
+                          {tournament.isRegistrationOpen ? '참가 신청' : '신청 마감'}
+                        </Button>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Box>
+              ))}
+            </Stack>
+          </>
+        )}
 
-                  <Box sx={{ mt: 'auto', pt: 2 }}>
-                    <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                      onClick={() => handleApplyClick(tournament)}
-                      disabled={!tournament.isRegistrationOpen || tournament.currentParticipants >= tournament.maxParticipants}
-                      sx={{
-                        bgcolor: darkTheme.accent.primary,
-                        '&:hover': {
-                          bgcolor: alpha(darkTheme.accent.primary, 0.8)
-                        },
-                        '&:disabled': {
-                          bgcolor: alpha(darkTheme.text.secondary, 0.3),
-                          color: alpha(darkTheme.text.secondary, 0.7)
-                        }
-                      }}
-                    >
-                      {tournament.isRegistrationOpen ? t('player.tournaments.apply') : t('tournament.status.closed')}
-                    </Button>
-                  </Box>
-                </CardContent>
-              </Card>
-            ))}
+        {tournaments.length === 0 && !isLoading && !error && (
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <TrophyIcon sx={{ fontSize: 64, color: 'text.secondary', mb: 2 }} />
+            <Typography variant="h6" color="text.secondary">
+              참가 가능한 대회가 없습니다
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              검색 조건을 조정해보세요
+            </Typography>
           </Box>
-        </>
-      )}
+        )}
 
         {/* 참가 신청 다이얼로그 */}
         <Dialog 
@@ -547,126 +359,65 @@ const PlayerTournaments: React.FC = () => {
           onClose={() => setApplyDialogOpen(false)} 
           maxWidth="sm" 
           fullWidth
-          PaperProps={{
-            sx: {
-              bgcolor: darkTheme.card.elevated,
-              border: `1px solid ${alpha(darkTheme.text.secondary, 0.1)}`
-            }
-          }}
         >
-          <DialogTitle sx={{ bgcolor: darkTheme.card.elevated }}>
-            <Typography variant="h6" fontWeight="bold" sx={{ color: darkTheme.text.primary }}>
-              {t('player.tournaments.applyTitle', { defaultValue: 'Apply for Tournament' })}
+          <DialogTitle>
+            <Typography variant="h6" fontWeight="bold">
+              대회 참가 신청
             </Typography>
           </DialogTitle>
-          <DialogContent sx={{ bgcolor: darkTheme.card.elevated }}>
+          <DialogContent>
             {selectedTournament && (
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom sx={{ color: darkTheme.text.primary }}>
+              <Box sx={{ pt: 1 }}>
+                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                   {selectedTournament.name}
                 </Typography>
                 
-                <Typography variant="body2" gutterBottom sx={{ color: darkTheme.text.secondary }}>
+                <Typography variant="body2" gutterBottom color="text.secondary">
                   📍 {selectedTournament.location} • 📅 {formatDate(selectedTournament.startDate)}
                 </Typography>
                 
-                <Typography variant="body2" gutterBottom sx={{ mb: 3, color: darkTheme.accent.gold, fontWeight: 600 }}>
-                  💰 {t('player.tournaments.fee')}: {formatCurrency(selectedTournament.participantFee)}
+                <Typography variant="body2" gutterBottom sx={{ mb: 3, color: '#FF6B35', fontWeight: 600 }}>
+                  💰 참가비: {formatCurrency(selectedTournament.participantFee)}
                 </Typography>
 
-                <FormControl fullWidth sx={{ 
-                  mb: 2,
-                  '& .MuiInputLabel-root': {
-                    color: darkTheme.text.secondary,
-                    '&.Mui-focused': {
-                      color: darkTheme.accent.primary,
-                    },
-                  },
-                  '& .MuiOutlinedInput-root': {
-                    bgcolor: alpha(darkTheme.background.tertiary, 0.5),
-                    color: darkTheme.text.primary,
-                    '& fieldset': {
-                      borderColor: alpha(darkTheme.text.secondary, 0.3),
-                    },
-                    '&:hover fieldset': {
-                      borderColor: darkTheme.accent.primary,
-                    },
-                    '&.Mui-focused fieldset': {
-                      borderColor: darkTheme.accent.primary,
-                    },
-                  },
-                }}>
-                  <InputLabel>{t('player.applications.eventType')}</InputLabel>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>경기 종목</InputLabel>
                   <Select
                     value={eventType}
                     onChange={(e) => setEventType(e.target.value as string)}
-                    label={t('player.applications.eventType')}
-                    MenuProps={{
-                      PaperProps: {
-                        sx: {
-                          bgcolor: darkTheme.card.elevated,
-                          '& .MuiMenuItem-root': {
-                            color: darkTheme.text.primary,
-                            '&:hover': {
-                              bgcolor: alpha(darkTheme.accent.primary, 0.1),
-                            },
-                            '&.Mui-selected': {
-                              bgcolor: alpha(darkTheme.accent.primary, 0.2),
-                              '&:hover': {
-                                bgcolor: alpha(darkTheme.accent.primary, 0.3),
-                              },
-                            },
-                          },
-                        },
-                      },
-                    }}
+                    label="경기 종목"
                   >
-                    <MenuItem value="singles">{t('player.bracket.singles')}</MenuItem>
-                    <MenuItem value="doubles">{t('player.bracket.doubles')}</MenuItem>
-                    <MenuItem value="mixed">{t('player.applications.mixed')}</MenuItem>
+                    <MenuItem value="singles">단식</MenuItem>
+                    <MenuItem value="doubles">복식</MenuItem>
+                    <MenuItem value="mixed">혼합복식</MenuItem>
                   </Select>
                 </FormControl>
 
-                <Alert 
-                  severity="info"
-                  sx={{
-                    bgcolor: alpha(darkTheme.accent.secondary, 0.1),
-                    color: darkTheme.accent.secondary,
-                    border: `1px solid ${alpha(darkTheme.accent.secondary, 0.3)}`,
-                    '& .MuiAlert-icon': {
-                      color: darkTheme.accent.secondary
-                    }
-                  }}
-                >
-                  {t('player.tournaments.applyNote', { defaultValue: 'Admin approval is required after application. You can check approval status in your dashboard.' })}
+                <Alert severity="info">
+                  참가 신청 후 관리자의 승인이 필요합니다. 승인 상태는 대시보드에서 확인할 수 있습니다.
                 </Alert>
               </Box>
             )}
           </DialogContent>
-          <DialogActions sx={{ bgcolor: darkTheme.card.elevated }}>
-            <Button 
-              onClick={() => setApplyDialogOpen(false)}
-              sx={{ color: darkTheme.text.secondary }}
-            >
-              {t('common.cancel')}
+          <DialogActions>
+            <Button onClick={() => setApplyDialogOpen(false)}>
+              취소
             </Button>
             <Button
               variant="contained"
               onClick={handleApplySubmit}
               startIcon={<TrophyIcon />}
               sx={{
-                bgcolor: darkTheme.accent.primary,
-                '&:hover': {
-                  bgcolor: alpha(darkTheme.accent.primary, 0.8)
-                }
+                bgcolor: '#8E24AA',
+                '&:hover': { bgcolor: '#7B1FA2' }
               }}
             >
-              {t('player.tournaments.applyButton', { defaultValue: 'Apply' })}
+              신청하기
             </Button>
           </DialogActions>
         </Dialog>
       </Container>
-    </Box>
+    </PlayerLayout>
   );
 };
 
