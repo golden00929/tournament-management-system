@@ -50,8 +50,10 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ darkMode = false })
     },
   };
 
+  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+
   return (
-    <FormControl size="small" sx={{ minWidth: 120 }}>
+    <FormControl size="small" sx={{ minWidth: 60 }}>
       <Select
         value={i18n.language}
         onChange={handleLanguageChange}
@@ -60,8 +62,12 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ darkMode = false })
           '& .MuiSelect-select': {
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
+            justifyContent: 'center',
+            gap: 0.5,
             color: darkMode ? darkTheme.text.primary : 'inherit',
+            minHeight: 'unset',
+            py: 0.5,
+            px: 1,
           },
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: darkMode ? alpha(darkTheme.text.secondary, 0.3) : 'rgba(0, 0, 0, 0.23)',
@@ -76,13 +82,11 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({ darkMode = false })
             color: darkMode ? darkTheme.text.secondary : 'inherit',
           },
         }}
-        startAdornment={
-          <LanguageIcon sx={{ 
-            color: darkMode ? darkTheme.accent.primary : 'action.active', 
-            mr: 1, 
-            fontSize: 20 
-          }} />
-        }
+        renderValue={() => (
+          <Typography component="span" sx={{ fontSize: '1.2em' }}>
+            {currentLanguage.flag}
+          </Typography>
+        )}
         MenuProps={{
           PaperProps: {
             sx: darkMode ? {

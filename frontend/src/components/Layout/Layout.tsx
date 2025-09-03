@@ -26,6 +26,8 @@ import {
 } from '@mui/icons-material';
 import { useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
+import NotificationSystem from '../Notifications/NotificationSystem';
+import { useNotifications } from '../../hooks/useNotifications';
 
 const drawerWidth = 240;
 
@@ -47,6 +49,15 @@ const Layout: React.FC = () => {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const {
+    notifications,
+    markAsRead,
+    dismissNotification,
+    clearAllNotifications,
+    showSuccessNotification,
+    showErrorNotification,
+    showInfoNotification,
+  } = useNotifications();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -61,6 +72,31 @@ const Layout: React.FC = () => {
     dispatch(logout());
     navigate('/login');
   };
+
+  // Demo notifications - Add some example notifications on component mount
+  React.useEffect(() => {
+    // Only add demo notifications once
+    const hasAddedDemo = localStorage.getItem('demo_notifications_added');
+    if (!hasAddedDemo) {
+      setTimeout(() => {
+        showInfoNotification(
+          '새로운 토너먼트 마법사가 추가되었습니다!', 
+          '시스템 업데이트',
+          { category: 'system', autoHide: false }
+        );
+      }, 1000);
+
+      setTimeout(() => {
+        showSuccessNotification(
+          'CSV 가져오기 기능이 성공적으로 구현되었습니다.',
+          '기능 추가',
+          { category: 'system' }
+        );
+      }, 2000);
+
+      localStorage.setItem('demo_notifications_added', 'true');
+    }
+  }, [showInfoNotification, showSuccessNotification]);
 
   const drawer = (
     <div>
@@ -135,6 +171,13 @@ const Layout: React.FC = () => {
               Miiracer 대회 관리 시스템
             </Typography>
           </Box>
+          <Box sx={{ flexGrow: 1 }} />
+          <NotificationSystem
+            notifications={notifications}
+            onNotificationRead={markAsRead}
+            onNotificationDismiss={dismissNotification}
+            onClearAll={clearAllNotifications}
+          />
         </Toolbar>
       </AppBar>
       <Box

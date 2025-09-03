@@ -1,26 +1,12 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "backend/src/server.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["backend/prisma/**"]
-      }
-    }
-  ],
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/build",
+  "installCommand": "cd frontend && npm install",
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "backend/src/server.ts"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "build": {
-    "env": {
-      "NODE_ENV": "production"
-    }
-  }
+  ]
 }
